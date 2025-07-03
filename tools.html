@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pat Williams | Tools</title>
+    <link rel="stylesheet" href="Favcss.css">
+    <link rel="icon" href="https://cdn3.emoji.gg/emojis/15862-crown.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            --glass-blur: blur(10px);
+        }
+
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            z-index: 9999;
+            font-family: 'Courier New', monospace;
+        }
+        .loader-content {
+            text-align: center;
+        }
+        .loader-text {
+            color: #fff;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px #fff;
+            margin-top: 20px;
+            letter-spacing: 2px;
+        }
+        .loader-icon {
+            width: 60px;
+            height: 60px;
+            background-image: url('https://cdn3.emoji.gg/emojis/15862-crown.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            filter: invert(1);
+            margin: 0 auto;
+        }
+        .glow-text {
+            color: #fff;
+            text-shadow: 0 0 5px #fff, 0 0 10px #aaa;
+            animation: white-glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes white-glow {
+            from { text-shadow: 0 0 5px #fff; }
+            to { text-shadow: 0 0 15px #fff, 0 0 20px #888; }
+        }
+
+        /* Glassmorphism Styles */
+        .tool-section {
+            margin-bottom: 40px;
+        }
+        .tool-section h2 {
+            margin-bottom: 20px;
+            color: white;
+            font-weight: 600;
+        }
+        .tool-container {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            transition: all 0.3s ease;
+        }
+        .tool-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+        .tool-container h3 {
+            margin-bottom: 15px;
+            color: white;
+            font-size: 1.3rem;
+        }
+        .tool-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        .tool-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 71, 87, 0.3);
+        }
+        .tool-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .tool-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+        }
+        .tool-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .tool-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .tool-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            word-break: break-all;
+            font-family: monospace;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        textarea.tool-input {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 25px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .tab-btn.active {
+            background: var(--accent);
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+        }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-icon"></div>
+            <div class="loader-text glow-text">.gg/favnc</div>
+        </div>
+    </div>
+
+    <div class="container" id="main-content" style="display: none;">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <div class="logo-text">Pat Williams</div>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="main.html" class="nav-link">Profile</a>
+                <a href="tools.html" class="nav-link active">Tools</a>
+                <a href="license.html" class="nav-link">License</a>
+            </nav>
+        </header>
+
+        <main>
+            <h1 class="glow-text">Developer Tools</h1>
+            
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="openTab('web-tools')">Web Tools</button>
+                <button class="tab-btn" onclick="openTab('code-tools')">Code Tools</button>
+                <button class="tab-btn" onclick="openTab('discord-tools')">Discord Tools</button>
+                <button class="tab-btn" onclick="openTab('game-tools')">Game Dev</button>
+                <button class="tab-btn" onclick="openTab('other-tools')">Other</button>
+            </div>
+
+            <div id="web-tools" class="tab-content active">
+                <div class="tool-section">
+                    <h2>Web Development Tools</h2>
+                    
+                    <div class="tool-container">
+                        <h3>Discord Webhook Sender</h3>
+                        <input type="text" class="tool-input" id="webhook-url" placeholder="Webhook URL">
+                        <input type="text" class="tool-input" id="webhook-username" placeholder="Username (optional)">
+                        <textarea class="tool-input" id="webhook-message" placeholder="Message content"></textarea>
+                        <button class="tool-btn" onclick="sendWebhook()">Send Message</button>
+                        <div class="tool-result" id="webhook-result"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>JSON Formatter</h3>
+                        <textarea class="tool-input" id="json-input" placeholder="Paste JSON here"></textarea>
+                        <button class="tool-btn" onclick="formatJSON()">Format JSON</button>
+                        <div class="tool-result" id="json-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>Base64 Encoder/Decoder</h3>
+                        <textarea class="tool-input" id="base64-input" placeholder="Enter text to encode/decode"></textarea>
+                        <button class="tool-btn" onclick="encodeBase64()">Encode</button>
+                        <button class="tool-btn secondary" onclick="decodeBase64()">Decode</button>
+                        <div class="tool-result" id="base64-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>URL Encoder/Decoder</h3>
+                        <textarea class="tool-input" id="url-input" placeholder="Enter URL to encode/decode"></textarea>
+                        <button class="tool-btn" onclick="encodeURL()">Encode</button>
+                        <button class="tool-btn secondary" onclick="decodeURL()">Decode</button>
+                        <div class="tool-result" id="url-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>HTML Escape/Unescape</h3>
+                        <textarea class="tool-input" id="html-input" placeholder="Enter HTML to escape/unescape"></textarea>
+                        <button class="tool-btn" onclick="escapeHTML()">Escape</button>
+                        <button class="tool-btn secondary" onclick="unescapeHTML()">Unescape</button>
+                        <div class="tool-result" id="html-output"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="code-tools" class="tab-content">
+                <div class="tool-section">
+                    <h2>Programming Tools</h2>
+                    
+                    <div class="tool-container">
+                        <h3>Color Hex Converter</h3>
+                        <input type="text" class="tool-input" id="hex-input" placeholder="Enter hex color (#RRGGBB)">
+                        <button class="tool-btn" onclick="convertHex()">Convert</button>
+                        <div class="tool-result" id="hex-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>RGB to HEX</h3>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
+                            <input type="number" class="tool-input" id="rgb-r" placeholder="R (0-255)" min="0" max="255">
+                            <input type="number" class="tool-input" id="rgb-g" placeholder="G (0-255)" min="0" max="255">
+                            <input type="number" class="tool-input" id="rgb-b" placeholder="B (0-255)" min="0" max="255">
+                        </div>
+                        <button class="tool-btn" onclick="rgbToHex()">Convert</button>
+                        <div class="tool-result" id="rgb-hex-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>Timestamp Converter</h3>
+                        <input type="text" class="tool-input" id="timestamp-input" placeholder="Enter timestamp or date">
+                        <button class="tool-btn" onclick="convertTimestamp()">Convert</button>
+                        <div class="tool-result" id="timestamp-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>UUID Generator</h3>
+                        <button class="tool-btn" onclick="generateUUID()">Generate UUID</button>
+                        <div class="tool-result" id="uuid-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>Lorem Ipsum Generator</h3>
+                        <input type="number" class="tool-input" id="lorem-count" placeholder="Number of paragraphs" min="1" max="20" value="3">
+                        <button class="tool-btn" onclick="generateLorem()">Generate</button>
+                        <div class="tool-result" id="lorem-output"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="discord-tools" class="tab-content">
+                <div class="tool-section">
+                    <h2>Discord Tools</h2>
+                    
+                    <div class="tool-container">
+                        <h3>Discord Embed Generator</h3>
+                        <input type="text" class="tool-input" id="embed-title" placeholder="Embed title">
+                        <input type="text" class="tool-input" id="embed-color" placeholder="Hex color (#RRGGBB)">
+                        <textarea class="tool-input" id="embed-desc" placeholder="Embed description"></textarea>
+                        <button class="tool-btn" onclick="generateEmbed()">Generate Embed JSON</button>
+                        <div class="tool-result" id="embed-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>Discord Timestamp Generator</h3>
+                        <input type="datetime-local" class="tool-input" id="discord-timestamp">
+                        <select class="tool-input" id="discord-timestamp-format" style="margin-top: 10px;">
+                            <option value="f">Short Date/Time</option>
+                            <option value="F">Long Date/Time</option>
+                            <option value="t">Short Time</option>
+                            <option value="T">Long Time</option>
+                            <option value="d">Short Date</option>
+                            <option value="D">Long Date</option>
+                            <option value="R">Relative Time</option>
+                        </select>
+                        <button class="tool-btn" onclick="generateDiscordTimestamp()">Generate</button>
+                        <div class="tool-result" id="discord-timestamp-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>Discord Token Generator</h3>
+                        <button class="tool-btn" onclick="generateDiscordToken()">Generate Fake Token</button>
+                        <div class="tool-result" id="discord-token-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>Discord Nitro Generator</h3>
+                        <button class="tool-btn" onclick="generateFakeNitro()">Generate Fake Nitro</button>
+                        <div class="tool-result" id="nitro-output"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="game-tools" class="tab-content">
+                <div class="tool-section">
+                    <h2>Game Development Tools</h2>
+                    
+                    <div class="tool-container">
+                        <h3>Roblox Lua Obfuscator</h3>
+                        <textarea class="tool-input" id="lua-code" placeholder="Paste Lua code here"></textarea>
+                        <button class="tool-btn" onclick="obfuscateLua()">Obfuscate</button>
+                        <div class="tool-result" id="lua-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>Roblox Place ID Finder</h3>
+                        <input type="text" class="tool-input" id="roblox-url" placeholder="Roblox game URL">
+                        <button class="tool-btn" onclick="findPlaceId()">Find Place ID</button>
+                        <div class="tool-result" id="placeid-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>Minecraft Command Generator</h3>
+                        <select class="tool-input" id="mc-command">
+                            <option value="give">Give Item</option>
+                            <option value="effect">Effect</option>
+                            <option value="teleport">Teleport</option>
+                            <option value="summon">Summon Entity</option>
+                        </select>
+                        <div id="mc-command-params" style="margin-top: 15px;"></div>
+                        <button class="tool-btn" onclick="generateMCCommand()">Generate</button>
+                        <div class="tool-result" id="mc-command-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>FPS Calculator</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px;">
+                            <input type="number" class="tool-input" id="fps-frames" placeholder="Total frames">
+                            <input type="number" class="tool-input" id="fps-time" placeholder="Time (seconds)">
+                        </div>
+                        <button class="tool-btn" onclick="calculateFPS()">Calculate FPS</button>
+                        <div class="tool-result" id="fps-output"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="other-tools" class="tab-content">
+                <div class="tool-section">
+                    <h2>Other Useful Tools</h2>
+                    
+                    <div class="tool-container">
+                        <h3>Password Generator</h3>
+                        <input type="number" class="tool-input" id="pass-length" placeholder="Length (8-64)" min="8" max="64" value="12">
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="pass-uppercase" checked> Uppercase</label>
+                            <label><input type="checkbox" id="pass-numbers" checked> Numbers</label>
+                            <label><input type="checkbox" id="pass-symbols"> Symbols</label>
+                        </div>
+                        <button class="tool-btn" onclick="generatePassword()">Generate</button>
+                        <div class="tool-result" id="pass-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>QR Code Generator</h3>
+                        <input type="text" class="tool-input" id="qr-text" placeholder="Text or URL">
+                        <button class="tool-btn" onclick="generateQR()">Generate QR Code</button>
+                        <div class="tool-result" id="qr-output" style="text-align: center;"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>Text Encryption</h3>
+                        <textarea class="tool-input" id="encrypt-text" placeholder="Text to encrypt/decrypt"></textarea>
+                        <input type="text" class="tool-input" id="encrypt-key" placeholder="Secret key">
+                        <button class="tool-btn" onclick="encryptText()">Encrypt</button>
+                        <button class="tool-btn secondary" onclick="decryptText()">Decrypt</button>
+                        <div class="tool-result" id="encrypt-output"></div>
+                    </div>
+
+                    <div class="tool-container">
+                        <h3>Binary Converter</h3>
+                        <textarea class="tool-input" id="binary-input" placeholder="Enter text or binary"></textarea>
+                        <button class="tool-btn" onclick="textToBinary()">Text to Binary</button>
+                        <button class="tool-btn secondary" onclick="binaryToText()">Binary to Text</button>
+                        <div class="tool-result" id="binary-output"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="social-links">
+                <a href="https://www.youtube.com/@heyitspat_y" class="social-link" target="_blank">
+                    <i class="fab fa-youtube"></i>
+                </a>
+                <a href="https://discord.gg/yhPuwb4qsX" class="social-link" target="_blank">
+                    <i class="fab fa-discord"></i>
+                </a>
+                <a href="https://github.com/Kreativscripts" class="social-link" target="_blank">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://www.roblox.com/users/3963189371/profile" class="social-link" target="_blank">
+                    <i class="fas fa-gamepad"></i>
+                </a>
+            </div>
+            <p class="copyright">© 2025 Pat Williams. All rights reserved.</p>
+        </footer>
+    </div>
+
+<script>
+    // Loader functionality
+    setTimeout(() => {
+        const loader = document.getElementById('loader');
+        loader.style.opacity = '0';
+        setTimeout(() => {
+            loader.style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            history.replaceState({}, '', '/tools.html');
+        }, 500);
+    }, 2000);
+
+    // Tab functionality
+    function openTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // Webhook Sender
+    function sendWebhook() {
+        const url = document.getElementById('webhook-url').value;
+        const username = document.getElementById('webhook-username').value;
+        const content = document.getElementById('webhook-message').value;
+        
+        if (!url) {
+            document.getElementById('webhook-result').textContent = 'Please enter a webhook URL';
+            return;
+        }
+        
+        const payload = { content };
+        if (username) payload.username = username;
+        
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (response.ok) {
+                document.getElementById('webhook-result').textContent = 'Message sent successfully!';
+            } else {
+                document.getElementById('webhook-result').textContent = 'Failed to send message: ' + response.status;
+            }
+        })
+        .catch(error => {
+            document.getElementById('webhook-result').textContent = 'Error: ' + error.message;
+        });
+    }
+
+    // JSON Formatter
+    function formatJSON() {
+        try {
+            const input = document.getElementById('json-input').value;
+            const parsed = JSON.parse(input);
+            document.getElementById('json-output').textContent = JSON.stringify(parsed, null, 2);
+        } catch (e) {
+            document.getElementById('json-output').textContent = 'Invalid JSON: ' + e.message;
+        }
+    }
+
+    // Base64 Encoder/Decoder
+    function encodeBase64() {
+        const input = document.getElementById('base64-input').value;
+        document.getElementById('base64-output').textContent = btoa(input);
+    }
+
+    function decodeBase64() {
+        try {
+            const input = document.getElementById('base64-input').value;
+            document.getElementById('base64-output').textContent = atob(input);
+        } catch (e) {
+            document.getElementById('base64-output').textContent = 'Invalid Base64: ' + e.message;
+        }
+    }
+
+    // URL Encoder/Decoder
+    function encodeURL() {
+        const input = document.getElementById('url-input').value;
+        document.getElementById('url-output').textContent = encodeURIComponent(input);
+    }
+
+    function decodeURL() {
+        try {
+            const input = document.getElementById('url-input').value;
+            document.getElementById('url-output').textContent = decodeURIComponent(input);
+        } catch (e) {
+            document.getElementById('url-output').textContent = 'Invalid URL encoding: ' + e.message;
+        }
+    }
+
+    // HTML Escape/Unescape
+    function escapeHTML() {
+        const input = document.getElementById('html-input').value;
+        document.getElementById('html-output').textContent = input
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function unescapeHTML() {
+        const input = document.getElementById('html-input').value;
+        document.getElementById('html-output').textContent = input
+            .replace(/&amp;/g, "&")
+            .replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">")
+            .replace(/&quot;/g, '"')
+            .replace(/&#039;/g, "'");
+    }
+
+    // Color Converters
+    function convertHex() {
+        const hex = document.getElementById('hex-input').value;
+        if (!/^#?([0-9A-F]{3}){1,2}$/i.test(hex)) {
+            document.getElementById('hex-output').textContent = 'Invalid hex color';
+            return;
+        }
+        
+        let r, g, b;
+        if (hex.length === 4) {
+            r = parseInt(hex[1] + hex[1], 16);
+            g = parseInt(hex[2] + hex[2], 16);
+            b = parseInt(hex[3] + hex[3], 16);
+        } else {
+            r = parseInt(hex.substring(1, 3), 16);
+            g = parseInt(hex.substring(3, 5), 16);
+            b = parseInt(hex.substring(5, 7), 16);
+        }
+        
+        document.getElementById('hex-output').textContent = `RGB: ${r}, ${g}, ${b}`;
+    }
+
+    function rgbToHex() {
+        const r = parseInt(document.getElementById('rgb-r').value);
+        const g = parseInt(document.getElementById('rgb-g').value);
+        const b = parseInt(document.getElementById('rgb-b').value);
+        
+        if (isNaN(r) || isNaN(g) || isNaN(b) || r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+            document.getElementById('rgb-hex-output').textContent = 'Invalid RGB values (0-255)';
+            return;
+        }
+        
+        const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        document.getElementById('rgb-hex-output').textContent = `HEX: ${hex}`;
+    }
+
+    // Timestamp Converter
+    function convertTimestamp() {
+        const input = document.getElementById('timestamp-input').value;
+        let date;
+        
+        if (/^\d+$/.test(input)) {
+            date = new Date(parseInt(input.length === 10 ? input * 1000 : input));
+        } else {
+            date = new Date(input);
+        }
+        
+        if (isNaN(date.getTime())) {
+            document.getElementById('timestamp-output').textContent = 'Invalid timestamp/date';
+            return;
+        }
+        
+        document.getElementById('timestamp-output').textContent = `
+            Local: ${date.toLocaleString()}
+            UTC: ${date.toUTCString()}
+            Unix: ${Math.floor(date.getTime() / 1000)}
+            Milliseconds: ${date.getTime()}
+        `;
+    }
+
+    // UUID Generator
+    function generateUUID() {
+        document.getElementById('uuid-output').textContent = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    // Lorem Ipsum Generator
+    function generateLorem() {
+        const count = parseInt(document.getElementById('lorem-count').value);
+        const lorem = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ';
+        let result = '';
+        
+        for (let i = 0; i < count; i++) {
+            result += lorem.repeat(5 + Math.floor(Math.random() * 5)) + '\n\n';
+        }
+        
+        document.getElementById('lorem-output').textContent = result.trim();
+    }
+
+    // Discord Tools
+    function generateEmbed() {
+        const title = document.getElementById('embed-title').value;
+        const color = document.getElementById('embed-color').value;
+        const description = document.getElementById('embed-desc').value;
+        
+        const embed = {
+            title: title || undefined,
+            description: description || undefined,
+            color: color ? parseInt(color.replace('#', ''), 16) : undefined,
+            timestamp: new Date().toISOString()
+        };
+        
+        document.getElementById('embed-output').textContent = JSON.stringify({ embeds: [embed] }, null, 2);
+    }
+
+    function generateDiscordTimestamp() {
+        const dateInput = document.getElementById('discord-timestamp').value;
+        const format = document.getElementById('discord-timestamp-format').value;
+        
+        if (!dateInput) {
+            document.getElementById('discord-timestamp-output').textContent = 'Please select a date/time';
+            return;
+        }
+        
+        const date = new Date(dateInput);
+        const timestamp = Math.floor(date.getTime() / 1000);
+        
+        document.getElementById('discord-timestamp-output').textContent = `Copy this: <t:${timestamp}:${format}>`;
+    }
+
+    function generateDiscordToken() {
+        const part1 = Math.random().toString(36).substring(2, 12);
+        const part2 = Math.random().toString(36).substring(2, 12);
+        const part3 = Math.random().toString(36).substring(2, 12);
+        document.getElementById('discord-token-output').textContent = `${part1}.${part2}.${part3}`;
+    }
+
+    function generateFakeNitro() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        
+        for (let i = 0; i < 16; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+            if (i % 4 === 3 && i < 15) code += '-';
+        }
+        
+        document.getElementById('nitro-output').textContent = `https://discord.gift/${code}`;
+    }
+
+    // Game Dev Tools
+    function obfuscateLua() {
+        const code = document.getElementById('lua-code').value;
+        if (!code.trim()) {
+            document.getElementById('lua-output').textContent = 'Please enter Lua code';
+            return;
+        }
+        
+        let obfuscated = code;
+        const vars = code.match(/\b(local\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\b/g) || [];
+        const varMap = {};
+        
+        vars.forEach(v => {
+            const varName = v.replace(/^local\s+/, '');
+            if (!varMap[varName] && varName.length > 3 && !['function', 'if', 'else', 'end'].includes(varName)) {
+                const newName = '_' + Math.random().toString(36).substring(2, 6);
+                varMap[varName] = newName;
+            }
+        });
+        
+        Object.entries(varMap).forEach(([oldName, newName]) => {
+            obfuscated = obfuscated.replace(new RegExp(`\\b${oldName}\\b`, 'g'), newName);
+        });
+        
+        document.getElementById('lua-output').textContent = obfuscated;
+    }
+
+    function findPlaceId() {
+        const url = document.getElementById('roblox-url').value;
+        const match = url.match(/place\?id=(\d+)/) || url.match(/games\/(\d+)/);
+        
+        if (match && match[1]) {
+            document.getElementById('placeid-output').textContent = `Place ID: ${match[1]}`;
+        } else {
+            document.getElementById('placeid-output').textContent = 'Could not find Place ID in URL';
+        }
+    }
+
+    function generateMCCommand() {
+        const type = document.getElementById('mc-command').value;
+        let command = '';
+        
+        switch (type) {
+            case 'give':
+                command = '/give @p minecraft:diamond 1';
+                break;
+            case 'effect':
+                command = '/effect @p minecraft:strength 60 1';
+                break;
+            case 'teleport':
+                command = '/tp @p 100 64 100';
+                break;
+            case 'summon':
+                command = '/summon minecraft:zombie ~ ~ ~ {CustomName:"\\"Test Zombie\\""}';
+                break;
+        }
+        
+        document.getElementById('mc-command-output').textContent = command;
+    }
+
+    function calculateFPS() {
+        const frames = parseInt(document.getElementById('fps-frames').value);
+        const time = parseFloat(document.getElementById('fps-time').value);
+        
+        if (isNaN(frames) || isNaN(time) || time <= 0) {
+            document.getElementById('fps-output').textContent = 'Invalid input';
+            return;
+        }
+        
+        const fps = Math.round(frames / time);
+        document.getElementById('fps-output').textContent = `FPS: ${fps}`;
+    }
+
+    // Other Tools
+    function generatePassword() {
+        const length = parseInt(document.getElementById('pass-length').value);
+        const uppercase = document.getElementById('pass-uppercase').checked;
+        const numbers = document.getElementById('pass-numbers').checked;
+        const symbols = document.getElementById('pass-symbols').checked;
+        
+        let chars = 'abcdefghijklmnopqrstuvwxyz';
+        if (uppercase) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        if (numbers) chars += '0123456789';
+        if (symbols) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        
+        let password = '';
+        for (let i = 0; i < length; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        
+        document.getElementById('pass-output').textContent = password;
+    }
+
+    function generateQR() {
+        const text = document.getElementById('qr-text').value;
+        if (!text) {
+            document.getElementById('qr-output').textContent = 'Please enter text';
+            return;
+        }
+        
+        const size = 200;
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
+        document.getElementById('qr-output').innerHTML = `<img src="${qrUrl}" alt="QR Code" style="max-width: 100%; height: auto;">`;
+    }
+
+    function encryptText() {
+        const text = document.getElementById('encrypt-text').value;
+        const key = document.getElementById('encrypt-key').value;
+        
+        if (!text || !key) {
+            document.getElementById('encrypt-output').textContent = 'Please enter both text and key';
+            return;
+        }
+        
+        let result = '';
+        for (let i = 0; i < text.length; i++) {
+            const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+            result += String.fromCharCode(charCode);
+        }
+        
+        document.getElementById('encrypt-output').textContent = btoa(result);
+    }
+
+    function decryptText() {
+        const text = atob(document.getElementById('encrypt-text').value);
+        const key = document.getElementById('encrypt-key').value;
+        
+        if (!text || !key) {
+            document.getElementById('encrypt-output').textContent = 'Please enter both text and key';
+            return;
+        }
+        
+        let result = '';
+        for (let i = 0; i < text.length; i++) {
+            const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+            result += String.fromCharCode(charCode);
+        }
+        
+        document.getElementById('encrypt-output').textContent = result;
+    }
+
+    // Binary Converter
+    function textToBinary() {
+        const text = document.getElementById('binary-input').value;
+        let binary = '';
+        
+        for (let i = 0; i < text.length; i++) {
+            binary += text.charCodeAt(i).toString(2).padStart(8, '0') + ' ';
+        }
+        
+        document.getElementById('binary-output').textContent = binary.trim();
+    }
+
+    function binaryToText() {
+        const binary = document.getElementById('binary-input').value.split(' ');
+        let text = '';
+        
+        for (let i = 0; i < binary.length; i++) {
+            text += String.fromCharCode(parseInt(binary[i], 2));
+        }
+        
+        document.getElementById('binary-output').textContent = text;
+    }
+</script>
+</body>
+</html>

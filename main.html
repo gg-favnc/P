@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pat Williams | Profile</title>
+    <link rel="stylesheet" href="Favcss.css">
+    <link rel="icon" href="https://cdn3.emoji.gg/emojis/15862-crown.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            z-index: 9999;
+            font-family: 'Courier New', monospace;
+        }
+        .loader-content {
+            text-align: center;
+        }
+        .loader-text {
+            color: #fff;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px #fff;
+            margin-top: 20px;
+            letter-spacing: 2px;
+        }
+        .loader-icon {
+            width: 60px;
+            height: 60px;
+            background-image: url('https://cdn3.emoji.gg/emojis/15862-crown.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            filter: invert(1);
+            margin: 0 auto;
+        }
+        .glow-text {
+            color: #fff;
+            text-shadow: 0 0 5px #fff, 0 0 10px #aaa;
+            animation: white-glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes white-glow {
+            from { text-shadow: 0 0 5px #fff; }
+            to { text-shadow: 0 0 15px #fff, 0 0 20px #888; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-icon"></div>
+            <div class="loader-text glow-text">.gg/favnc</div>
+        </div>
+    </div>
+
+    <div class="container" id="main-content" style="display: none;">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <div class="logo-text">Pat Williams</div>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="main.html" class="nav-link active">Profile</a>
+                <a href="tools.html" class="nav-link">Tools</a>
+                <a href="license.html" class="nav-link">License</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="profile-section">
+                <h1 class="glow-text">About Me</h1>
+                <div class="profile-card">
+                    <div class="profile-image-container">
+                        <img src="https://cdn.discordapp.com/attachments/1387610894590283896/1390219747827650640/Fav_Nonchalant_.ggfavnc.gif?ex=68677688&is=68662508&hm=0e439d484a6d96f17ce46eea566a1c636ed860a2f78541418d425b55baaaa821&" alt="Pat Williams" class="profile-image">
+                    </div>
+                    <div class="profile-info">
+                        <h2><i class="fas fa-user"></i> Personal Info</h2>
+                        <p><strong>Name:</strong> Pat Williams</p>
+                        <p><strong>Age:</strong> 15</p>
+                        <p><strong>Location:</strong> Ontario, Canada</p>
+                        <p><strong>Status:</strong> Available for projects</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h2 class="glow-text"><i class="fas fa-code"></i> Development Skills</h2>
+                <div class="skills-grid">
+                    <div class="skill-card">
+                        <h3>Frontend</h3>
+                        <ul>
+                            <li>HTML5/CSS3</li>
+                            <li>JavaScript</li>
+                            <li>React</li>
+                            <li>UI/UX Design</li>
+                        </ul>
+                    </div>
+                    <div class="skill-card">
+                        <h3>Backend</h3>
+                        <ul>
+                            <li>Node.js</li>
+                            <li>Express</li>
+                            <li>Database Design</li>
+                            <li>API Development</li>
+                        </ul>
+                    </div>
+                    <div class="skill-card">
+                        <h3>Game Dev</h3>
+                        <ul>
+                            <li>Roblox Lua</li>
+                            <li>Game Design</li>
+                            <li>Scripting</li>
+                            <li>Physics Systems</li>
+                        </ul>
+                    </div>
+                    <div class="skill-card">
+                        <h3>Other</h3>
+                        <ul>
+                            <li>Discord Bots</li>
+                            <li>Cybersecurity</li>
+                            <li>AI Integration</li>
+                            <li>Linux Server</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h2 class="glow-text"><i class="fas fa-trophy"></i> Projects & Achievements</h2>
+                <div class="achievements-grid">
+                    <div class="achievement-card">
+                        <h3>Nexus Command</h3>
+                        <p>Advanced Discord bot with 500+ servers</p>
+                        <span class="badge">JavaScript</span>
+                    </div>
+                    <div class="achievement-card">
+                        <h3>Roblox Tycoon</h3>
+                        <p>Popular game with 1M+ visits</p>
+                        <span class="badge">Lua</span>
+                    </div>
+                    <div class="achievement-card">
+                        <h3>Web Security</h3>
+                        <p>Developed protection systems</p>
+                        <span class="badge">Cybersecurity</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="social-links">
+                <a href="https://www.youtube.com/@heyitspat_y" class="social-link" target="_blank">
+                    <i class="fab fa-youtube"></i>
+                </a>
+                <a href="https://discord.gg/yhPuwb4qsX" class="social-link" target="_blank">
+                    <i class="fab fa-discord"></i>
+                </a>
+                <a href="https://github.com/Kreativscripts" class="social-link" target="_blank">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://www.roblox.com/users/3963189371/profile" class="social-link" target="_blank">
+                    <i class="fas fa-gamepad"></i>
+                </a>
+            </div>
+            <p class="copyright">© 2025 Pat Williams. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        setTimeout(() => {
+            const loader = document.getElementById('loader');
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                history.replaceState({}, '', '/main.html');
+            }, 500);
+        }, 2000);
+    </script>
+</body>
+</html>

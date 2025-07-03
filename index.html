@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pat Williams | Home</title>
+    <link rel="stylesheet" href="Favcss.css">
+    <link rel="icon" href="https://cdn3.emoji.gg/emojis/15862-crown.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-icon"></div>
+            <div>.gg/favnc</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container" id="main-content" style="display: none;">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <div class="logo-text">Pat Williams</div>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link active">Home</a>
+                <a href="main.html" class="nav-link">Profile</a>
+                <a href="tools.html" class="nav-link">Tools</a>
+                <a href="license.html" class="nav-link">License</a>
+            </nav>
+        </header>
+
+        <main class="hero">
+            <div class="hero-left">
+                <h1 class="hero-title">Developer & Digital Creator</h1>
+                <h2 class="hero-subtitle">Building innovative solutions for the digital world</h2>
+                <p class="hero-bio">
+                    Hi, I'm Pat Williams, a 15-year-old developer from Ontario, Canada. 
+                    I specialize in creating Discord bots, Roblox scripts, and web applications. 
+                    Passionate about technology and always learning new skills.
+                </p>
+                
+                <div class="action-buttons">
+                    <a href="main.html" class="btn btn-primary">
+                        <i class="fas fa-user"></i> View Profile
+                    </a>
+                    <a href="tools.html" class="btn btn-secondary">
+                        <i class="fas fa-tools"></i> Explore Tools
+                    </a>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="viewerCount">0</div>
+                        <div class="stat-label">Visitors</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="projectCount">12+</div>
+                        <div class="stat-label">Projects</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="likeCount">0</div>
+                        <div class="stat-label">Likes</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hero-right">
+                <img src="https://cdn.discordapp.com/attachments/1387610894590283896/1390235033943412736/standard.gif?ex=686784c5&is=68663345&hm=a372206813142a11fc69d35a92b555cdab85988b14a5246525b6b17b2167e9bc&" alt="Pat Williams" class="hero-image">
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="social-links">
+                <a href="https://www.youtube.com/@heyitspat_y" class="social-link" target="_blank">
+                    <i class="fab fa-youtube"></i>
+                </a>
+                <a href="https://discord.gg/yhPuwb4qsX" class="social-link" target="_blank">
+                    <i class="fab fa-discord"></i>
+                </a>
+                <a href="https://github.com/Kreativscripts" class="social-link" target="_blank">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://www.roblox.com/users/3963189371/profile" class="social-link" target="_blank">
+                    <i class="fas fa-gamepad"></i>
+                </a>
+            </div>
+            <p class="copyright">© 2025 Pat Williams. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // URL Path Animation
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_=+[]{}!@#$%^&*()';
+        let pathInterval;
+        let count = 0;
+        
+        function generateRandomPath() {
+            let path = '';
+            const segments = Math.floor(Math.random() * 3) + 1;
+            
+            for (let i = 0; i < segments; i++) {
+                const length = Math.floor(Math.random() * 10) + 5;
+                for (let j = 0; j < length; j++) {
+                    path += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                if (i < segments - 1) path += '/';
+            }
+            return path;
+        }
+        
+        function updateUrlPath() {
+            count++;
+            let newPath;
+            
+            if (count % 15 === 0) {
+                // Every 15 iterations, show "favnc"
+                newPath = '/favnc';
+                setTimeout(() => {
+                    window.history.pushState({}, '', generateRandomPath());
+                }, 200);
+            } else {
+                newPath = '/' + generateRandomPath();
+            }
+            
+            window.history.pushState({}, '', newPath);
+        }
+
+        // Initialize counters
+        function initializeCounters() {
+            // Viewer counter
+            if (!localStorage.getItem('globalViewCount')) {
+                localStorage.setItem('globalViewCount', '1000');
+            }
+            
+            if (!sessionStorage.getItem('viewCounted')) {
+                const currentCount = parseInt(localStorage.getItem('globalViewCount'));
+                localStorage.setItem('globalViewCount', (currentCount + 1).toString());
+                sessionStorage.setItem('viewCounted', 'true');
+            }
+            
+            document.getElementById('viewerCount').textContent = 
+                parseInt(localStorage.getItem('globalViewCount')).toLocaleString();
+            
+            // Like counter
+            if (!localStorage.getItem('globalLikeCount')) {
+                localStorage.setItem('globalLikeCount', '0');
+            }
+            
+            document.getElementById('likeCount').textContent = localStorage.getItem('globalLikeCount');
+            
+            // Simulate random growth
+            setInterval(() => {
+                const viewers = parseInt(localStorage.getItem('globalViewCount'));
+                const newViewers = viewers + Math.floor(Math.random() * 5) + 1;
+                localStorage.setItem('globalViewCount', newViewers.toString());
+                document.getElementById('viewerCount').textContent = newViewers.toLocaleString();
+            }, 5000);
+        }
+        
+        // Page transition
+        window.addEventListener('DOMContentLoaded', () => {
+            // Start the URL path animation
+            pathInterval = setInterval(updateUrlPath, 100);
+            initializeCounters();
+            
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    document.getElementById('main-content').style.display = 'block';
+                    
+                    // Stop the path animation and set final URL
+                    clearInterval(pathInterval);
+                    window.history.pushState({}, '', '/index.html');
+                }, 500);
+            }, 2500);
+        });
+    </script>
+</body>
+</html>
