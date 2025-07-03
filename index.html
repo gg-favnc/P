@@ -92,41 +92,6 @@
     </div>
 
     <script>
-        // URL Path Animation
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_=+[]{}!@#$%^&*()';
-        let pathInterval;
-        let count = 0;
-        
-        function generateRandomPath() {
-            let path = '';
-            const segments = Math.floor(Math.random() * 3) + 1;
-            
-            for (let i = 0; i < segments; i++) {
-                const length = Math.floor(Math.random() * 10) + 5;
-                for (let j = 0; j < length; j++) {
-                    path += chars.charAt(Math.floor(Math.random() * chars.length));
-                }
-                if (i < segments - 1) path += '/';
-            }
-            return path;
-        }
-        
-        function updateUrlPath() {
-            count++;
-            let newPath;
-            
-            if (count % 15 === 0) {
-                // Every 15 iterations, show "favnc"
-                newPath = '/favnc';
-                setTimeout(() => {
-                    window.history.pushState({}, '', generateRandomPath());
-                }, 200);
-            } else {
-                newPath = '/' + generateRandomPath();
-            }
-            
-            window.history.pushState({}, '', newPath);
-        }
 
         // Initialize counters
         function initializeCounters() {
