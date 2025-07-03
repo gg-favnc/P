@@ -20,6 +20,7 @@
             background: #000;
             z-index: 9999;
             font-family: 'Courier New', monospace;
+            transition: opacity 0.5s ease;
         }
         .loader-content {
             text-align: center;
@@ -49,6 +50,14 @@
             from { text-shadow: 0 0 5px #fff; }
             to { text-shadow: 0 0 15px #fff, 0 0 20px #888; }
         }
+        .container {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .container.show {
+            opacity: 1;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -59,7 +68,7 @@
         </div>
     </div>
 
-    <div class="container" id="main-content" style="display: none;">
+    <div class="container" id="main-content">
         <header class="header">
             <div class="logo">
                 <div class="logo-icon"></div>
@@ -166,7 +175,70 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we're coming from another page in the site
+            const isNavigation = performance.getEntriesByType('navigation')[0].type === 'navigate';
+            
+            if (isNavigation) {
+                // For page navigation, show loader briefly
+                setTimeout(() => {
+                    const loader = document.getElementById('loader');
+                    loader.style.opacity = '0';
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        document.getElementById('main-content').classList.add('show');
+                    }, 500);
+                }, 500); // Shorter delay for in-site navigation
+            } else {
+                // For initial page load, use the full loader experience
+                setTimeout(() => {
+                    const loader = document.getElementById('loader');
+                    loader.style.opacity = '0';
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        document.getElementById('main-content').classList.add('show');
+                    }, 500);
+                }, 2000);
+            }
 
+            // Fix all internal links to maintain /P/ path
+            document.querySelectorAll('a').forEach(link => {
+                if (link.href && link.href.includes(window.location.host) && 
+                    !link.href.includes('/P/') && 
+                    !link.getAttribute('href').startsWith('http') &&
+                    !link.getAttribute('href').startsWith('#')) {
+                    
+                    const currentPath = window.location.pathname;
+                    const basePath = currentPath.includes('/P/') ? '/P/' : '/';
+                    
+                    if (link.getAttribute('href').startsWith('/')) {
+                        link.href = basePath + link.getAttribute('href').substring(1);
+                    } else {
+                        link.href = basePath + link.getAttribute('href');
+                    }
+                }
+            });
+        });
+
+        // Handle link clicks to show loader before navigation
+        document.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.href && 
+                    this.href.includes(window.location.host) && 
+                    !this.target && 
+                    !this.hasAttribute('download')) {
+                    
+                    e.preventDefault();
+                    const loader = document.getElementById('loader');
+                    loader.style.display = 'flex';
+                    loader.style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        window.location.href = this.href;
+                    }, 100);
+                }
+            });
+        });
     </script>
 </body>
 </html>
