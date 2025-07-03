@@ -465,7 +465,8 @@
 
 <script>
     // Tab functionality
-    function openTab(tabId) {
+    function openTab(tabId, event) {
+        event.preventDefault();
         document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.remove('active');
         });
@@ -474,21 +475,53 @@
         });
         document.getElementById(tabId).classList.add('active');
         event.currentTarget.classList.add('active');
+        
+        // Update URL without reloading
+        const basePath = window.location.pathname.includes('/P/') ? '/P/' : '/';
+        const newUrl = `${basePath}tools.html#${tabId}`;
+        window.history.pushState({}, '', newUrl);
     }
 
-    // Webhook Sender
+    // Initialize tab from hash
+    function initTabFromHash() {
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+            const tab = document.getElementById(hash);
+            if (tab && tab.classList.contains('tab-content')) {
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelector(`.tab-btn[onclick*="${hash}"]`).classList.add('active');
+            }
+        }
+    }
+
+    // Webhook Sender with improved error handling
     function sendWebhook() {
-        const url = document.getElementById('webhook-url').value;
-        const username = document.getElementById('webhook-username').value;
-        const content = document.getElementById('webhook-message').value;
+        const url = document.getElementById('webhook-url').value.trim();
+        const username = document.getElementById('webhook-username').value.trim();
+        const content = document.getElementById('webhook-message').value.trim();
+        const resultElement = document.getElementById('webhook-result');
         
         if (!url) {
-            document.getElementById('webhook-result').textContent = 'Please enter a webhook URL';
+            resultElement.textContent = 'Please enter a webhook URL';
+            resultElement.style.color = 'red';
+            return;
+        }
+        
+        // Validate URL format
+        if (!url.startsWith('https://discord.com/api/webhooks/') && 
+            !url.startsWith('http://discord.com/api/webhooks/')) {
+            resultElement.textContent = 'Invalid Discord webhook URL';
+            resultElement.style.color = 'red';
             return;
         }
         
         const payload = { content };
         if (username) payload.username = username;
+        
+        resultElement.textContent = 'Sending...';
+        resultElement.style.color = 'yellow';
         
         fetch(url, {
             method: 'POST',
@@ -497,41 +530,102 @@
         })
         .then(response => {
             if (response.ok) {
-                document.getElementById('webhook-result').textContent = 'Message sent successfully!';
+                resultElement.textContent = 'Message sent successfully!';
+                resultElement.style.color = 'green';
+                setTimeout(() => {
+                    resultElement.textContent = '';
+                }, 3000);
             } else {
-                document.getElementById('webhook-result').textContent = 'Failed to send message: ' + response.status;
+                return response.json().then(err => {
+                    throw new Error(err.message || `HTTP ${response.status}`);
+                });
             }
         })
         .catch(error => {
-            document.getElementById('webhook-result').textContent = 'Error: ' + error.message;
+            resultElement.textContent = `Error: ${error.message}`;
+            resultElement.style.color = 'red';
         });
     }
 
-    // JSON Formatter
+    // JSON Formatter with syntax highlighting
     function formatJSON() {
+        const input = document.getElementById('json-input').value;
+        const output = document.getElementById('json-output');
+        
         try {
-            const input = document.getElementById('json-input').value;
             const parsed = JSON.parse(input);
-            document.getElementById('json-output').textContent = JSON.stringify(parsed, null, 2);
+            const formatted = JSON.stringify(parsed, null, 2);
+            
+            // Simple syntax highlighting
+            output.innerHTML = formatted
+                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?/g, match => {
+                    let cls = 'json-value';
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    }
+                    return `<span class="${cls}">${match}</span>`;
+                })
+                .replace(/\b(true|false|null)\b/g, '<span class="json-literal">$&</span>')
+                .replace(/\b\d+\b/g, '<span class="json-number">$&</span>');
         } catch (e) {
-            document.getElementById('json-output').textContent = 'Invalid JSON: ' + e.message;
+            output.textContent = 'Invalid JSON: ' + e.message;
         }
     }
 
-    // Base64 Encoder/Decoder
+    // Base64 Encoder/Decoder with file support
     function encodeBase64() {
-        const input = document.getElementById('base64-input').value;
-        document.getElementById('base64-output').textContent = btoa(input);
+        const fileInput = document.getElementById('base64-file');
+        const textInput = document.getElementById('base64-input').value;
+        const output = document.getElementById('base64-output');
+        
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result.split(',')[1];
+                output.textContent = base64;
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        } else if (textInput) {
+            output.textContent = btoa(unescape(encodeURIComponent(textInput)));
+        } else {
+            output.textContent = 'Please enter text or select a file';
+        }
     }
 
     function decodeBase64() {
         try {
-            const input = document.getElementById('base64-input').value;
-            document.getElementById('base64-output').textContent = atob(input);
+            const input = document.getElementById('base64-input').value.trim();
+            document.getElementById('base64-output').textContent = decodeURIComponent(escape(atob(input)));
         } catch (e) {
             document.getElementById('base64-output').textContent = 'Invalid Base64: ' + e.message;
         }
     }
+
+    // Initialize on DOM load
+    document.addEventListener('DOMContentLoaded', function() {
+        initTabFromHash();
+        
+        // Fix all internal links to maintain /P/ path
+        document.querySelectorAll('a').forEach(link => {
+            if (link.href && link.href.includes(window.location.host) && 
+                !link.href.includes('/P/') && 
+                !link.getAttribute('href').startsWith('http') &&
+                !link.getAttribute('href').startsWith('#')) {
+                
+                const currentPath = window.location.pathname;
+                const basePath = currentPath.includes('/P/') ? '/P/' : '/';
+                
+                if (link.getAttribute('href').startsWith('/')) {
+                    link.href = basePath + link.getAttribute('href').substring(1);
+                } else {
+                    link.href = basePath + link.getAttribute('href');
+                }
+            }
+        });
+    });
+
+    // Handle hash changes
+    window.addEventListener('hashchange', initTabFromHash);
 
     // URL Encoder/Decoder
     function encodeURL() {
