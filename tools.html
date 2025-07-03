@@ -491,66 +491,78 @@
                 document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 tab.classList.add('active');
-                document.querySelector(`.tab-btn[onclick*="${hash}"]`).classList.add('active');
+                const btn = document.querySelector(`.tab-btn[onclick*="${hash}"]`);
+                if (btn) btn.classList.add('active');
             }
         }
     }
 
     // Webhook Sender with improved error handling
-    function sendWebhook() {
+    async function sendWebhook() {
         const url = document.getElementById('webhook-url').value.trim();
         const username = document.getElementById('webhook-username').value.trim();
         const content = document.getElementById('webhook-message').value.trim();
         const resultElement = document.getElementById('webhook-result');
         
         if (!url) {
-            resultElement.textContent = 'Please enter a webhook URL';
-            resultElement.style.color = 'red';
+            showResult(resultElement, 'Please enter a webhook URL', 'error');
             return;
         }
         
         // Validate URL format
-        if (!url.startsWith('https://discord.com/api/webhooks/') && 
-            !url.startsWith('http://discord.com/api/webhooks/')) {
-            resultElement.textContent = 'Invalid Discord webhook URL';
-            resultElement.style.color = 'red';
+        if (!url.match(/^https?:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[\w-]+$/i)) {
+            showResult(resultElement, 'Invalid Discord webhook URL format', 'error');
+            return;
+        }
+        
+        if (!content) {
+            showResult(resultElement, 'Please enter a message', 'error');
             return;
         }
         
         const payload = { content };
         if (username) payload.username = username;
         
-        resultElement.textContent = 'Sending...';
-        resultElement.style.color = 'yellow';
+        showResult(resultElement, 'Sending...', 'loading');
         
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(response => {
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
             if (response.ok) {
-                resultElement.textContent = 'Message sent successfully!';
-                resultElement.style.color = 'green';
+                showResult(resultElement, 'Message sent successfully!', 'success');
                 setTimeout(() => {
                     resultElement.textContent = '';
+                    resultElement.style.color = '';
                 }, 3000);
             } else {
-                return response.json().then(err => {
-                    throw new Error(err.message || `HTTP ${response.status}`);
-                });
+                const error = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
+                throw new Error(error.message || 'Failed to send webhook');
             }
-        })
-        .catch(error => {
-            resultElement.textContent = `Error: ${error.message}`;
-            resultElement.style.color = 'red';
-        });
+        } catch (error) {
+            showResult(resultElement, `Error: ${error.message}`, 'error');
+        }
+    }
+
+    function showResult(element, message, type) {
+        element.textContent = message;
+        element.style.color = type === 'error' ? '#ff6b6b' : 
+                            type === 'success' ? '#51cf66' : 
+                            type === 'loading' ? '#fcc419' : '';
     }
 
     // JSON Formatter with syntax highlighting
     function formatJSON() {
-        const input = document.getElementById('json-input').value;
+        const input = document.getElementById('json-input').value.trim();
         const output = document.getElementById('json-output');
+        
+        if (!input) {
+            output.textContent = 'Please enter JSON to format';
+            return;
+        }
         
         try {
             const parsed = JSON.parse(input);
@@ -558,54 +570,566 @@
             
             // Simple syntax highlighting
             output.innerHTML = formatted
-                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?/g, match => {
-                    let cls = 'json-value';
+                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|\b\d+\b)/g, match => {
                     if (/:$/.test(match)) {
-                        cls = 'json-key';
+                        return `<span class="json-key">${match}</span>`;
+                    } else if (/^"/.test(match)) {
+                        return `<span class="json-string">${match}</span>`;
+                    } else if (/true|false|null/.test(match)) {
+                        return `<span class="json-literal">${match}</span>`;
+                    } else if (/\d+/.test(match)) {
+                        return `<span class="json-number">${match}</span>`;
                     }
-                    return `<span class="${cls}">${match}</span>`;
-                })
-                .replace(/\b(true|false|null)\b/g, '<span class="json-literal">$&</span>')
-                .replace(/\b\d+\b/g, '<span class="json-number">$&</span>');
+                    return match;
+                });
         } catch (e) {
-            output.textContent = 'Invalid JSON: ' + e.message;
+            output.textContent = `Invalid JSON: ${e.message}`;
         }
     }
 
-    // Base64 Encoder/Decoder with file support
+    // Base64 Encoder/Decoder
     function encodeBase64() {
-        const fileInput = document.getElementById('base64-file');
-        const textInput = document.getElementById('base64-input').value;
+        const input = document.getElementById('base64-input').value.trim();
         const output = document.getElementById('base64-output');
         
-        if (fileInput.files && fileInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const base64 = e.target.result.split(',')[1];
-                output.textContent = base64;
-            };
-            reader.readAsDataURL(fileInput.files[0]);
-        } else if (textInput) {
-            output.textContent = btoa(unescape(encodeURIComponent(textInput)));
-        } else {
-            output.textContent = 'Please enter text or select a file';
+        if (!input) {
+            output.textContent = 'Please enter text to encode';
+            return;
+        }
+        
+        try {
+            output.textContent = btoa(unescape(encodeURIComponent(input)));
+        } catch (e) {
+            output.textContent = `Error encoding: ${e.message}`;
         }
     }
 
     function decodeBase64() {
-        try {
-            const input = document.getElementById('base64-input').value.trim();
-            document.getElementById('base64-output').textContent = decodeURIComponent(escape(atob(input)));
-        } catch (e) {
-            document.getElementById('base64-output').textContent = 'Invalid Base64: ' + e.message;
+        const input = document.getElementById('base64-input').value.trim();
+        const output = document.getElementById('base64-output');
+        
+        if (!input) {
+            output.textContent = 'Please enter Base64 to decode';
+            return;
         }
+        
+        try {
+            // Check if input is valid Base64
+            if (!/^[A-Za-z0-9+/=]+$/.test(input)) {
+                throw new Error('Invalid Base64 characters');
+            }
+            output.textContent = decodeURIComponent(escape(atob(input)));
+        } catch (e) {
+            output.textContent = `Error decoding: ${e.message}`;
+        }
+    }
+
+    // URL Encoder/Decoder
+    function encodeURL() {
+        const input = document.getElementById('url-input').value.trim();
+        const output = document.getElementById('url-output');
+        
+        if (!input) {
+            output.textContent = 'Please enter text to encode';
+            return;
+        }
+        
+        output.textContent = encodeURIComponent(input);
+    }
+
+    function decodeURL() {
+        const input = document.getElementById('url-input').value.trim();
+        const output = document.getElementById('url-output');
+        
+        if (!input) {
+            output.textContent = 'Please enter URL to decode';
+            return;
+        }
+        
+        try {
+            output.textContent = decodeURIComponent(input.replace(/\+/g, ' '));
+        } catch (e) {
+            output.textContent = `Error decoding URL: ${e.message}`;
+        }
+    }
+
+    // HTML Escape/Unescape
+    function escapeHTML() {
+        const input = document.getElementById('html-input').value.trim();
+        const output = document.getElementById('html-output');
+        
+        if (!input) {
+            output.textContent = 'Please enter HTML to escape';
+            return;
+        }
+        
+        output.textContent = input
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function unescapeHTML() {
+        const input = document.getElementById('html-input').value.trim();
+        const output = document.getElementById('html-output');
+        
+        if (!input) {
+            output.textContent = 'Please enter HTML to unescape';
+            return;
+        }
+        
+        output.textContent = input
+            .replace(/&amp;/g, "&")
+            .replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">")
+            .replace(/&quot;/g, '"')
+            .replace(/&#039;/g, "'")
+            .replace(/&#x27;/g, "'");
+    }
+
+    // Color Converters
+    function convertHex() {
+        const hex = document.getElementById('hex-input').value.trim();
+        const output = document.getElementById('hex-output');
+        
+        if (!hex) {
+            output.textContent = 'Please enter a hex color';
+            return;
+        }
+        
+        // Validate hex format
+        if (!/^#?([0-9A-F]{3}){1,2}$/i.test(hex)) {
+            output.textContent = 'Invalid hex color format (e.g. #RRGGBB or #RGB)';
+            return;
+        }
+        
+        // Remove # if present
+        const hexValue = hex.replace('#', '');
+        let r, g, b;
+        
+        // Handle 3-digit hex
+        if (hexValue.length === 3) {
+            r = parseInt(hexValue[0] + hexValue[0], 16);
+            g = parseInt(hexValue[1] + hexValue[1], 16);
+            b = parseInt(hexValue[2] + hexValue[2], 16);
+        } 
+        // Handle 6-digit hex
+        else {
+            r = parseInt(hexValue.substring(0, 2), 16);
+            g = parseInt(hexValue.substring(2, 4), 16);
+            b = parseInt(hexValue.substring(4, 6), 16);
+        }
+        
+        output.textContent = `RGB: ${r}, ${g}, ${b}\nHEX: #${hexValue.padStart(6, '0')}`;
+    }
+
+    function rgbToHex() {
+        const r = parseInt(document.getElementById('rgb-r').value);
+        const g = parseInt(document.getElementById('rgb-g').value);
+        const b = parseInt(document.getElementById('rgb-b').value);
+        const output = document.getElementById('rgb-hex-output');
+        
+        // Validate RGB values
+        if (isNaN(r) || isNaN(g) || isNaN(b) || 
+            r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+            output.textContent = 'Invalid RGB values (must be 0-255)';
+            return;
+        }
+        
+        const hex = '#' + [r, g, b].map(x => {
+            const hex = x.toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        }).join('');
+        
+        output.textContent = `HEX: ${hex.toUpperCase()}\nRGB: ${r}, ${g}, ${b}`;
+    }
+
+    // Timestamp Converter
+    function convertTimestamp() {
+        const input = document.getElementById('timestamp-input').value.trim();
+        const output = document.getElementById('timestamp-output');
+        
+        if (!input) {
+            output.textContent = 'Please enter a timestamp or date';
+            return;
+        }
+        
+        let date;
+        
+        // Handle Unix timestamp (seconds or milliseconds)
+        if (/^\d+$/.test(input)) {
+            date = new Date(input.length === 10 ? input * 1000 : +input);
+        } 
+        // Handle ISO date string or other date formats
+        else {
+            date = new Date(input);
+        }
+        
+        if (isNaN(date.getTime())) {
+            output.textContent = 'Invalid timestamp/date format';
+            return;
+        }
+        
+        const unixSeconds = Math.floor(date.getTime() / 1000);
+        const unixMilliseconds = date.getTime();
+        
+        output.textContent = `
+Local Time: ${date.toLocaleString()}
+UTC Time: ${date.toUTCString()}
+Unix Timestamp (seconds): ${unixSeconds}
+Unix Timestamp (milliseconds): ${unixMilliseconds}
+ISO 8601: ${date.toISOString()}`;
+    }
+
+    // UUID Generator
+    function generateUUID() {
+        const output = document.getElementById('uuid-output');
+        const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+        output.textContent = uuid;
+    }
+
+    // Lorem Ipsum Generator
+    function generateLorem() {
+        const count = parseInt(document.getElementById('lorem-count').value) || 3;
+        const output = document.getElementById('lorem-output');
+        
+        if (count < 1 || count > 20) {
+            output.textContent = 'Please enter a number between 1 and 20';
+            return;
+        }
+        
+        const lorem = [
+            'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+            'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+            'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.',
+            'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.',
+            'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.'
+        ];
+        
+        let result = '';
+        for (let i = 0; i < count; i++) {
+            const sentences = [];
+            const sentenceCount = 3 + Math.floor(Math.random() * 3);
+            for (let j = 0; j < sentenceCount; j++) {
+                sentences.push(lorem[Math.floor(Math.random() * lorem.length)]);
+            }
+            result += sentences.join(' ') + '\n\n';
+        }
+        
+        output.textContent = result.trim();
+    }
+
+    // Discord Tools
+    function generateEmbed() {
+        const title = document.getElementById('embed-title').value.trim();
+        const color = document.getElementById('embed-color').value.trim();
+        const description = document.getElementById('embed-desc').value.trim();
+        const output = document.getElementById('embed-output');
+        
+        if (!title && !description) {
+            output.textContent = 'Please enter at least a title or description';
+            return;
+        }
+        
+        const embed = {
+            title: title || undefined,
+            description: description || undefined,
+            color: color ? parseInt(color.replace('#', ''), 16) : undefined,
+            timestamp: new Date().toISOString()
+        };
+        
+        output.textContent = JSON.stringify({ embeds: [embed] }, null, 2);
+    }
+
+    function generateDiscordTimestamp() {
+        const dateInput = document.getElementById('discord-timestamp').value;
+        const format = document.getElementById('discord-timestamp-format').value;
+        const output = document.getElementById('discord-timestamp-output');
+        
+        if (!dateInput) {
+            output.textContent = 'Please select a date and time';
+            return;
+        }
+        
+        const date = new Date(dateInput);
+        const timestamp = Math.floor(date.getTime() / 1000);
+        
+        output.textContent = `Discord Timestamp: <t:${timestamp}:${format}>\n\nRaw format: \`<t:${timestamp}:${format}>\``;
+    }
+
+    function generateDiscordToken() {
+        const output = document.getElementById('discord-token-output');
+        const part1 = btoa(Math.random().toString().substring(2)).substring(0, 24);
+        const part2 = btoa(Math.random().toString().substring(2)).substring(0, 6);
+        const part3 = btoa(Math.random().toString().substring(2)).substring(0, 27);
+        output.textContent = `${part1}.${part2}.${part3}`;
+    }
+
+    function generateFakeNitro() {
+        const output = document.getElementById('nitro-output');
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        
+        for (let i = 0; i < 16; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+            if (i % 4 === 3 && i < 15) code += '-';
+        }
+        
+        output.textContent = `https://discord.gift/${code}`;
+    }
+
+    // Game Dev Tools
+    function obfuscateLua() {
+        const code = document.getElementById('lua-code').value.trim();
+        const output = document.getElementById('lua-output');
+        
+        if (!code) {
+            output.textContent = 'Please enter Lua code to obfuscate';
+            return;
+        }
+        
+        // Simple obfuscation - replace variable names
+        const keywords = new Set(['and', 'break', 'do', 'else', 'elseif', 'end', 
+                                'false', 'for', 'function', 'if', 'in', 'local', 
+                                'nil', 'not', 'or', 'repeat', 'return', 'then', 
+                                'true', 'until', 'while']);
+        
+        const varMap = {};
+        let obfuscated = code;
+        const varRegex = /\b(?!local\b)([a-zA-Z_][a-zA-Z0-9_]*)\b/g;
+        let match;
+        
+        // Find all variables
+        while ((match = varRegex.exec(code)) !== null) {
+            const varName = match[1];
+            if (!keywords.has(varName) && !varMap[varName] && varName.length > 2) {
+                varMap[varName] = `_${Object.keys(varMap).length}`;
+            }
+        }
+        
+        // Replace variables
+        Object.entries(varMap).forEach(([oldName, newName]) => {
+            obfuscated = obfuscated.replace(new RegExp(`\\b${oldName}\\b`, 'g'), newName);
+        });
+        
+        output.textContent = obfuscated;
+    }
+
+    function findPlaceId() {
+        const url = document.getElementById('roblox-url').value.trim();
+        const output = document.getElementById('placeid-output');
+        
+        if (!url) {
+            output.textContent = 'Please enter a Roblox game URL';
+            return;
+        }
+        
+        const match = url.match(/(?:place\?id=|games\/)(\d+)/);
+        if (match && match[1]) {
+            output.textContent = `Place ID: ${match[1]}`;
+        } else {
+            output.textContent = 'Could not find Place ID in URL. Make sure it includes "place?id=" or "games/"';
+        }
+    }
+
+    function generateMCCommand() {
+        const type = document.getElementById('mc-command').value;
+        const output = document.getElementById('mc-command-output');
+        let command = '';
+        
+        switch (type) {
+            case 'give':
+                command = '/give @p minecraft:diamond 1';
+                break;
+            case 'effect':
+                command = '/effect give @p minecraft:strength 60 1';
+                break;
+            case 'teleport':
+                command = '/tp @p 100 64 100';
+                break;
+            case 'summon':
+                command = '/summon minecraft:zombie ~ ~ ~ {CustomName:\'"Test Zombie"\', ArmorItems:[{},{},{},{id:"minecraft:diamond_helmet",Count:1b}]}';
+                break;
+        }
+        
+        output.textContent = command;
+    }
+
+    function calculateFPS() {
+        const frames = parseInt(document.getElementById('fps-frames').value);
+        const time = parseFloat(document.getElementById('fps-time').value);
+        const output = document.getElementById('fps-output');
+        
+        if (isNaN(frames) {
+            output.textContent = 'Please enter a valid number of frames';
+            return;
+        }
+        
+        if (isNaN(time) || time <= 0) {
+            output.textContent = 'Please enter a valid time (greater than 0)';
+            return;
+        }
+        
+        const fps = (frames / time).toFixed(2);
+        output.textContent = `FPS: ${fps}`;
+    }
+
+    // Other Tools
+    function generatePassword() {
+        const length = parseInt(document.getElementById('pass-length').value) || 12;
+        const uppercase = document.getElementById('pass-uppercase').checked;
+        const numbers = document.getElementById('pass-numbers').checked;
+        const symbols = document.getElementById('pass-symbols').checked;
+        const output = document.getElementById('pass-output');
+        
+        if (length < 8 || length > 64) {
+            output.textContent = 'Password length must be between 8 and 64';
+            return;
+        }
+        
+        let chars = 'abcdefghijklmnopqrstuvwxyz';
+        if (uppercase) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        if (numbers) chars += '0123456789';
+        if (symbols) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        
+        let password = '';
+        for (let i = 0; i < length; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        
+        output.textContent = password;
+    }
+
+    function generateQR() {
+        const text = document.getElementById('qr-text').value.trim();
+        const output = document.getElementById('qr-output');
+        
+        if (!text) {
+            output.textContent = 'Please enter text or URL to generate QR code';
+            return;
+        }
+        
+        const size = 200;
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
+        output.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="max-width: 100%; height: auto; border: 1px solid #444;">`;
+    }
+
+    // Text Encryption/Decryption (simple XOR cipher)
+    function encryptText() {
+        const text = document.getElementById('encrypt-text').value.trim();
+        const key = document.getElementById('encrypt-key').value.trim();
+        const output = document.getElementById('encrypt-output');
+        
+        if (!text) {
+            output.textContent = 'Please enter text to encrypt';
+            return;
+        }
+        
+        if (!key) {
+            output.textContent = 'Please enter an encryption key';
+            return;
+        }
+        
+        let result = '';
+        for (let i = 0; i < text.length; i++) {
+            const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+            result += String.fromCharCode(charCode);
+        }
+        
+        output.textContent = btoa(result);
+    }
+
+    function decryptText() {
+        const text = document.getElementById('encrypt-text').value.trim();
+        const key = document.getElementById('encrypt-key').value.trim();
+        const output = document.getElementById('encrypt-output');
+        
+        if (!text) {
+            output.textContent = 'Please enter text to decrypt';
+            return;
+        }
+        
+        if (!key) {
+            output.textContent = 'Please enter the decryption key';
+            return;
+        }
+        
+        try {
+            const decoded = atob(text);
+            let result = '';
+            for (let i = 0; i < decoded.length; i++) {
+                const charCode = decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                result += String.fromCharCode(charCode);
+            }
+            output.textContent = result;
+        } catch (e) {
+            output.textContent = 'Error: Invalid base64 input';
+        }
+    }
+
+    // Binary Converter
+    function textToBinary() {
+        const text = document.getElementById('binary-input').value.trim();
+        const output = document.getElementById('binary-output');
+        
+        if (!text) {
+            output.textContent = 'Please enter text to convert';
+            return;
+        }
+        
+        let binary = '';
+        for (let i = 0; i < text.length; i++) {
+            binary += text.charCodeAt(i).toString(2).padStart(8, '0') + ' ';
+        }
+        
+        output.textContent = binary.trim();
+    }
+
+    function binaryToText() {
+        const binary = document.getElementById('binary-input').value.trim();
+        const output = document.getElementById('binary-output');
+        
+        if (!binary) {
+            output.textContent = 'Please enter binary to convert';
+            return;
+        }
+        
+        // Clean input (remove non-binary characters)
+        const cleanBinary = binary.replace(/[^01]/g, '');
+        
+        // Split into 8-bit chunks
+        const chunks = [];
+        for (let i = 0; i < cleanBinary.length; i += 8) {
+            chunks.push(cleanBinary.substring(i, i + 8));
+        }
+        
+        let text = '';
+        for (const chunk of chunks) {
+            if (chunk.length === 8) {
+                text += String.fromCharCode(parseInt(chunk, 2));
+            }
+        }
+        
+        output.textContent = text;
     }
 
     // Initialize on DOM load
     document.addEventListener('DOMContentLoaded', function() {
+        // Show main content after loader
+        setTimeout(() => {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+        }, 1000);
+        
         initTabFromHash();
         
-        // Fix all internal links to maintain /P/ path
+        // Fix all internal links to maintain /P/ path if needed
         document.querySelectorAll('a').forEach(link => {
             if (link.href && link.href.includes(window.location.host) && 
                 !link.href.includes('/P/') && 
@@ -626,337 +1150,6 @@
 
     // Handle hash changes
     window.addEventListener('hashchange', initTabFromHash);
-
-    // URL Encoder/Decoder
-    function encodeURL() {
-        const input = document.getElementById('url-input').value;
-        document.getElementById('url-output').textContent = encodeURIComponent(input);
-    }
-
-    function decodeURL() {
-        try {
-            const input = document.getElementById('url-input').value;
-            document.getElementById('url-output').textContent = decodeURIComponent(input);
-        } catch (e) {
-            document.getElementById('url-output').textContent = 'Invalid URL encoding: ' + e.message;
-        }
-    }
-
-    // HTML Escape/Unescape
-    function escapeHTML() {
-        const input = document.getElementById('html-input').value;
-        document.getElementById('html-output').textContent = input
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
-    function unescapeHTML() {
-        const input = document.getElementById('html-input').value;
-        document.getElementById('html-output').textContent = input
-            .replace(/&amp;/g, "&")
-            .replace(/&lt;/g, "<")
-            .replace(/&gt;/g, ">")
-            .replace(/&quot;/g, '"')
-            .replace(/&#039;/g, "'");
-    }
-
-    // Color Converters
-    function convertHex() {
-        const hex = document.getElementById('hex-input').value;
-        if (!/^#?([0-9A-F]{3}){1,2}$/i.test(hex)) {
-            document.getElementById('hex-output').textContent = 'Invalid hex color';
-            return;
-        }
-        
-        let r, g, b;
-        if (hex.length === 4) {
-            r = parseInt(hex[1] + hex[1], 16);
-            g = parseInt(hex[2] + hex[2], 16);
-            b = parseInt(hex[3] + hex[3], 16);
-        } else {
-            r = parseInt(hex.substring(1, 3), 16);
-            g = parseInt(hex.substring(3, 5), 16);
-            b = parseInt(hex.substring(5, 7), 16);
-        }
-        
-        document.getElementById('hex-output').textContent = `RGB: ${r}, ${g}, ${b}`;
-    }
-
-    function rgbToHex() {
-        const r = parseInt(document.getElementById('rgb-r').value);
-        const g = parseInt(document.getElementById('rgb-g').value);
-        const b = parseInt(document.getElementById('rgb-b').value);
-        
-        if (isNaN(r) || isNaN(g) || isNaN(b) || r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
-            document.getElementById('rgb-hex-output').textContent = 'Invalid RGB values (0-255)';
-            return;
-        }
-        
-        const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-        document.getElementById('rgb-hex-output').textContent = `HEX: ${hex}`;
-    }
-
-    // Timestamp Converter
-    function convertTimestamp() {
-        const input = document.getElementById('timestamp-input').value;
-        let date;
-        
-        if (/^\d+$/.test(input)) {
-            date = new Date(parseInt(input.length === 10 ? input * 1000 : input));
-        } else {
-            date = new Date(input);
-        }
-        
-        if (isNaN(date.getTime())) {
-            document.getElementById('timestamp-output').textContent = 'Invalid timestamp/date';
-            return;
-        }
-        
-        document.getElementById('timestamp-output').textContent = `
-            Local: ${date.toLocaleString()}
-            UTC: ${date.toUTCString()}
-            Unix: ${Math.floor(date.getTime() / 1000)}
-            Milliseconds: ${date.getTime()}
-        `;
-    }
-
-    // UUID Generator
-    function generateUUID() {
-        document.getElementById('uuid-output').textContent = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
-
-    // Lorem Ipsum Generator
-    function generateLorem() {
-        const count = parseInt(document.getElementById('lorem-count').value);
-        const lorem = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ';
-        let result = '';
-        
-        for (let i = 0; i < count; i++) {
-            result += lorem.repeat(5 + Math.floor(Math.random() * 5)) + '\n\n';
-        }
-        
-        document.getElementById('lorem-output').textContent = result.trim();
-    }
-
-    // Discord Tools
-    function generateEmbed() {
-        const title = document.getElementById('embed-title').value;
-        const color = document.getElementById('embed-color').value;
-        const description = document.getElementById('embed-desc').value;
-        
-        const embed = {
-            title: title || undefined,
-            description: description || undefined,
-            color: color ? parseInt(color.replace('#', ''), 16) : undefined,
-            timestamp: new Date().toISOString()
-        };
-        
-        document.getElementById('embed-output').textContent = JSON.stringify({ embeds: [embed] }, null, 2);
-    }
-
-    function generateDiscordTimestamp() {
-        const dateInput = document.getElementById('discord-timestamp').value;
-        const format = document.getElementById('discord-timestamp-format').value;
-        
-        if (!dateInput) {
-            document.getElementById('discord-timestamp-output').textContent = 'Please select a date/time';
-            return;
-        }
-        
-        const date = new Date(dateInput);
-        const timestamp = Math.floor(date.getTime() / 1000);
-        
-        document.getElementById('discord-timestamp-output').textContent = `Copy this: <t:${timestamp}:${format}>`;
-    }
-
-    function generateDiscordToken() {
-        const part1 = Math.random().toString(36).substring(2, 12);
-        const part2 = Math.random().toString(36).substring(2, 12);
-        const part3 = Math.random().toString(36).substring(2, 12);
-        document.getElementById('discord-token-output').textContent = `${part1}.${part2}.${part3}`;
-    }
-
-    function generateFakeNitro() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let code = '';
-        
-        for (let i = 0; i < 16; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-            if (i % 4 === 3 && i < 15) code += '-';
-        }
-        
-        document.getElementById('nitro-output').textContent = `https://discord.gift/${code}`;
-    }
-
-    // Game Dev Tools
-    function obfuscateLua() {
-        const code = document.getElementById('lua-code').value;
-        if (!code.trim()) {
-            document.getElementById('lua-output').textContent = 'Please enter Lua code';
-            return;
-        }
-        
-        let obfuscated = code;
-        const vars = code.match(/\b(local\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\b/g) || [];
-        const varMap = {};
-        
-        vars.forEach(v => {
-            const varName = v.replace(/^local\s+/, '');
-            if (!varMap[varName] && varName.length > 3 && !['function', 'if', 'else', 'end'].includes(varName)) {
-                const newName = '_' + Math.random().toString(36).substring(2, 6);
-                varMap[varName] = newName;
-            }
-        });
-        
-        Object.entries(varMap).forEach(([oldName, newName]) => {
-            obfuscated = obfuscated.replace(new RegExp(`\\b${oldName}\\b`, 'g'), newName);
-        });
-        
-        document.getElementById('lua-output').textContent = obfuscated;
-    }
-
-    function findPlaceId() {
-        const url = document.getElementById('roblox-url').value;
-        const match = url.match(/place\?id=(\d+)/) || url.match(/games\/(\d+)/);
-        
-        if (match && match[1]) {
-            document.getElementById('placeid-output').textContent = `Place ID: ${match[1]}`;
-        } else {
-            document.getElementById('placeid-output').textContent = 'Could not find Place ID in URL';
-        }
-    }
-
-    function generateMCCommand() {
-        const type = document.getElementById('mc-command').value;
-        let command = '';
-        
-        switch (type) {
-            case 'give':
-                command = '/give @p minecraft:diamond 1';
-                break;
-            case 'effect':
-                command = '/effect @p minecraft:strength 60 1';
-                break;
-            case 'teleport':
-                command = '/tp @p 100 64 100';
-                break;
-            case 'summon':
-                command = '/summon minecraft:zombie ~ ~ ~ {CustomName:"\\"Test Zombie\\""}';
-                break;
-        }
-        
-        document.getElementById('mc-command-output').textContent = command;
-    }
-
-    function calculateFPS() {
-        const frames = parseInt(document.getElementById('fps-frames').value);
-        const time = parseFloat(document.getElementById('fps-time').value);
-        
-        if (isNaN(frames) || isNaN(time) || time <= 0) {
-            document.getElementById('fps-output').textContent = 'Invalid input';
-            return;
-        }
-        
-        const fps = Math.round(frames / time);
-        document.getElementById('fps-output').textContent = `FPS: ${fps}`;
-    }
-
-    // Other Tools
-    function generatePassword() {
-        const length = parseInt(document.getElementById('pass-length').value);
-        const uppercase = document.getElementById('pass-uppercase').checked;
-        const numbers = document.getElementById('pass-numbers').checked;
-        const symbols = document.getElementById('pass-symbols').checked;
-        
-        let chars = 'abcdefghijklmnopqrstuvwxyz';
-        if (uppercase) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        if (numbers) chars += '0123456789';
-        if (symbols) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
-        
-        let password = '';
-        for (let i = 0; i < length; i++) {
-            password += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        
-        document.getElementById('pass-output').textContent = password;
-    }
-
-    function generateQR() {
-        const text = document.getElementById('qr-text').value;
-        if (!text) {
-            document.getElementById('qr-output').textContent = 'Please enter text';
-            return;
-        }
-        
-        const size = 200;
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
-        document.getElementById('qr-output').innerHTML = `<img src="${qrUrl}" alt="QR Code" style="max-width: 100%; height: auto;">`;
-    }
-
-    function encryptText() {
-        const text = document.getElementById('encrypt-text').value;
-        const key = document.getElementById('encrypt-key').value;
-        
-        if (!text || !key) {
-            document.getElementById('encrypt-output').textContent = 'Please enter both text and key';
-            return;
-        }
-        
-        let result = '';
-        for (let i = 0; i < text.length; i++) {
-            const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-            result += String.fromCharCode(charCode);
-        }
-        
-        document.getElementById('encrypt-output').textContent = btoa(result);
-    }
-
-    function decryptText() {
-        const text = atob(document.getElementById('encrypt-text').value);
-        const key = document.getElementById('encrypt-key').value;
-        
-        if (!text || !key) {
-            document.getElementById('encrypt-output').textContent = 'Please enter both text and key';
-            return;
-        }
-        
-        let result = '';
-        for (let i = 0; i < text.length; i++) {
-            const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-            result += String.fromCharCode(charCode);
-        }
-        
-        document.getElementById('encrypt-output').textContent = result;
-    }
-
-    // Binary Converter
-    function textToBinary() {
-        const text = document.getElementById('binary-input').value;
-        let binary = '';
-        
-        for (let i = 0; i < text.length; i++) {
-            binary += text.charCodeAt(i).toString(2).padStart(8, '0') + ' ';
-        }
-        
-        document.getElementById('binary-output').textContent = binary.trim();
-    }
-
-    function binaryToText() {
-        const binary = document.getElementById('binary-input').value.split(' ');
-        let text = '';
-        
-        for (let i = 0; i < binary.length; i++) {
-            text += String.fromCharCode(parseInt(binary[i], 2));
-        }
-        
-        document.getElementById('binary-output').textContent = text;
-    }
 </script>
 </body>
 </html>
