@@ -207,12 +207,34 @@
                     }, 500);
                 }, 2000);
             }
+
+            // Fix all internal links to maintain /P/ path
+            document.querySelectorAll('a').forEach(link => {
+                if (link.href && link.href.includes(window.location.host) && 
+                    !link.href.includes('/P/') && 
+                    !link.getAttribute('href').startsWith('http') &&
+                    !link.getAttribute('href').startsWith('#')) {
+                    
+                    const currentPath = window.location.pathname;
+                    const basePath = currentPath.includes('/P/') ? '/P/' : '/';
+                    
+                    if (link.getAttribute('href').startsWith('/')) {
+                        link.href = basePath + link.getAttribute('href').substring(1);
+                    } else {
+                        link.href = basePath + link.getAttribute('href');
+                    }
+                }
+            });
         });
 
         // Handle link clicks to show loader before navigation
-        document.querySelectorAll('a[href^=""]').forEach(link => {
+        document.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', function(e) {
-                if (this.href && !this.target && !this.hasAttribute('download')) {
+                if (this.href && 
+                    this.href.includes(window.location.host) && 
+                    !this.target && 
+                    !this.hasAttribute('download')) {
+                    
                     e.preventDefault();
                     const loader = document.getElementById('loader');
                     loader.style.display = 'flex';
