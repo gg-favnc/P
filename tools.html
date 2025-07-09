@@ -465,8 +465,7 @@
 
 <script>
     // Tab functionality
-    function openTab(tabId, event) {
-        event.preventDefault();
+    function openTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.remove('active');
         });
@@ -474,9 +473,13 @@
             btn.classList.remove('active');
         });
         document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
         
-        // Update URL without reloading
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            if (btn.getAttribute('onclick').includes(tabId)) {
+                btn.classList.add('active');
+            }
+        });
+        
         const basePath = window.location.pathname.includes('/P/') ? '/P/' : '/';
         const newUrl = `${basePath}tools.html#${tabId}`;
         window.history.pushState({}, '', newUrl);
@@ -488,40 +491,24 @@
         if (hash) {
             const tab = document.getElementById(hash);
             if (tab && tab.classList.contains('tab-content')) {
-                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                tab.classList.add('active');
-                const btn = document.querySelector(`.tab-btn[onclick*="${hash}"]`);
-                if (btn) btn.classList.add('active');
+                openTab(hash);
             }
         }
     }
 
-    // Webhook Sender with improved error handling
+    // ======================
+    // WEB TOOLS (4 tools)
+    // ======================
+    
+    // 1. Webhook Sender
     async function sendWebhook() {
         const url = document.getElementById('webhook-url').value.trim();
         const username = document.getElementById('webhook-username').value.trim();
         const content = document.getElementById('webhook-message').value.trim();
         const resultElement = document.getElementById('webhook-result');
         
-        if (!url) {
-            showResult(resultElement, 'Please enter a webhook URL', 'error');
-            return;
-        }
-        
-        // Validate URL format
-        if (!url.match(/^https?:\/\/(?:discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[\w-]+$/i)) {
-            showResult(resultElement, 'Invalid Discord webhook URL format', 'error');
-            return;
-        }
-        
-        if (!content) {
-            showResult(resultElement, 'Please enter a message', 'error');
-            return;
-        }
-        
-        const payload = { content };
-        if (username) payload.username = username;
+        if (!url) return showResult(resultElement, 'Please enter a webhook URL', 'error');
+        if (!content) return showResult(resultElement, 'Please enter a message', 'error');
         
         showResult(resultElement, 'Sending...', 'loading');
         
@@ -529,281 +516,105 @@
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ content, username: username || undefined })
             });
             
             if (response.ok) {
                 showResult(resultElement, 'Message sent successfully!', 'success');
-                setTimeout(() => {
-                    resultElement.textContent = '';
-                    resultElement.style.color = '';
-                }, 3000);
             } else {
-                const error = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
-                throw new Error(error.message || 'Failed to send webhook');
+                throw new Error(`HTTP ${response.status}`);
             }
         } catch (error) {
             showResult(resultElement, `Error: ${error.message}`, 'error');
         }
     }
 
-    function showResult(element, message, type) {
-        element.textContent = message;
-        element.style.color = type === 'error' ? '#ff6b6b' : 
-                            type === 'success' ? '#51cf66' : 
-                            type === 'loading' ? '#fcc419' : '';
-    }
-
-    // JSON Formatter with syntax highlighting
+    // 2. JSON Formatter
     function formatJSON() {
         const input = document.getElementById('json-input').value.trim();
         const output = document.getElementById('json-output');
         
-        if (!input) {
-            output.textContent = 'Please enter JSON to format';
-            return;
-        }
-        
         try {
-            const parsed = JSON.parse(input);
-            const formatted = JSON.stringify(parsed, null, 2);
-            
-            // Simple syntax highlighting
-            output.innerHTML = formatted
-                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|\b\d+\b)/g, match => {
-                    if (/:$/.test(match)) {
-                        return `<span class="json-key">${match}</span>`;
-                    } else if (/^"/.test(match)) {
-                        return `<span class="json-string">${match}</span>`;
-                    } else if (/true|false|null/.test(match)) {
-                        return `<span class="json-literal">${match}</span>`;
-                    } else if (/\d+/.test(match)) {
-                        return `<span class="json-number">${match}</span>`;
-                    }
-                    return match;
-                });
+            output.textContent = JSON.stringify(JSON.parse(input), null, 2);
         } catch (e) {
             output.textContent = `Invalid JSON: ${e.message}`;
         }
     }
 
-    // Base64 Encoder/Decoder
+    // 3. Base64 Encoder/Decoder
     function encodeBase64() {
         const input = document.getElementById('base64-input').value.trim();
-        const output = document.getElementById('base64-output');
-        
-        if (!input) {
-            output.textContent = 'Please enter text to encode';
-            return;
-        }
-        
-        try {
-            output.textContent = btoa(unescape(encodeURIComponent(input)));
-        } catch (e) {
-            output.textContent = `Error encoding: ${e.message}`;
-        }
+        document.getElementById('base64-output').textContent = btoa(unescape(encodeURIComponent(input)));
     }
 
     function decodeBase64() {
         const input = document.getElementById('base64-input').value.trim();
-        const output = document.getElementById('base64-output');
-        
-        if (!input) {
-            output.textContent = 'Please enter Base64 to decode';
-            return;
-        }
-        
-        try {
-            // Check if input is valid Base64
-            if (!/^[A-Za-z0-9+/=]+$/.test(input)) {
-                throw new Error('Invalid Base64 characters');
-            }
-            output.textContent = decodeURIComponent(escape(atob(input)));
-        } catch (e) {
-            output.textContent = `Error decoding: ${e.message}`;
-        }
+        document.getElementById('base64-output').textContent = decodeURIComponent(escape(atob(input)));
     }
 
-    // URL Encoder/Decoder
+    // 4. URL Encoder/Decoder
     function encodeURL() {
         const input = document.getElementById('url-input').value.trim();
-        const output = document.getElementById('url-output');
-        
-        if (!input) {
-            output.textContent = 'Please enter text to encode';
-            return;
-        }
-        
-        output.textContent = encodeURIComponent(input);
+        document.getElementById('url-output').textContent = encodeURIComponent(input);
     }
 
     function decodeURL() {
         const input = document.getElementById('url-input').value.trim();
-        const output = document.getElementById('url-output');
-        
-        if (!input) {
-            output.textContent = 'Please enter URL to decode';
-            return;
-        }
-        
-        try {
-            output.textContent = decodeURIComponent(input.replace(/\+/g, ' '));
-        } catch (e) {
-            output.textContent = `Error decoding URL: ${e.message}`;
-        }
+        document.getElementById('url-output').textContent = decodeURIComponent(input.replace(/\+/g, ' '));
     }
 
-    // HTML Escape/Unescape
-    function escapeHTML() {
-        const input = document.getElementById('html-input').value.trim();
-        const output = document.getElementById('html-output');
-        
-        if (!input) {
-            output.textContent = 'Please enter HTML to escape';
-            return;
-        }
-        
-        output.textContent = input
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
+    // ======================
+    // CODE TOOLS (4 tools)
+    // ======================
 
-    function unescapeHTML() {
-        const input = document.getElementById('html-input').value.trim();
-        const output = document.getElementById('html-output');
-        
-        if (!input) {
-            output.textContent = 'Please enter HTML to unescape';
-            return;
-        }
-        
-        output.textContent = input
-            .replace(/&amp;/g, "&")
-            .replace(/&lt;/g, "<")
-            .replace(/&gt;/g, ">")
-            .replace(/&quot;/g, '"')
-            .replace(/&#039;/g, "'")
-            .replace(/&#x27;/g, "'");
-    }
-
-    // Color Converters
+    // 1. Color Converter
     function convertHex() {
-        const hex = document.getElementById('hex-input').value.trim();
+        const hex = document.getElementById('hex-input').value.trim().replace('#', '');
         const output = document.getElementById('hex-output');
         
-        if (!hex) {
-            output.textContent = 'Please enter a hex color';
-            return;
+        if (!hex.match(/^([0-9A-F]{3}){1,2}$/i)) {
+            return output.textContent = 'Invalid hex color';
         }
         
-        // Validate hex format
-        if (!/^#?([0-9A-F]{3}){1,2}$/i.test(hex)) {
-            output.textContent = 'Invalid hex color format (e.g. #RRGGBB or #RGB)';
-            return;
-        }
+        const r = parseInt(hex.length === 3 ? hex[0] + hex[0] : hex.substring(0, 2), 16);
+        const g = parseInt(hex.length === 3 ? hex[1] + hex[1] : hex.substring(2, 4), 16);
+        const b = parseInt(hex.length === 3 ? hex[2] + hex[2] : hex.substring(4, 6), 16);
         
-        // Remove # if present
-        const hexValue = hex.replace('#', '');
-        let r, g, b;
-        
-        // Handle 3-digit hex
-        if (hexValue.length === 3) {
-            r = parseInt(hexValue[0] + hexValue[0], 16);
-            g = parseInt(hexValue[1] + hexValue[1], 16);
-            b = parseInt(hexValue[2] + hexValue[2], 16);
-        } 
-        // Handle 6-digit hex
-        else {
-            r = parseInt(hexValue.substring(0, 2), 16);
-            g = parseInt(hexValue.substring(2, 4), 16);
-            b = parseInt(hexValue.substring(4, 6), 16);
-        }
-        
-        output.textContent = `RGB: ${r}, ${g}, ${b}\nHEX: #${hexValue.padStart(6, '0')}`;
+        output.textContent = `RGB: ${r}, ${g}, ${b}\nHEX: #${hex.padStart(6, '0')}`;
     }
 
-    function rgbToHex() {
-        const r = parseInt(document.getElementById('rgb-r').value);
-        const g = parseInt(document.getElementById('rgb-g').value);
-        const b = parseInt(document.getElementById('rgb-b').value);
-        const output = document.getElementById('rgb-hex-output');
-        
-        // Validate RGB values
-        if (isNaN(r) || isNaN(g) || isNaN(b) || 
-            r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
-            output.textContent = 'Invalid RGB values (must be 0-255)';
-            return;
-        }
-        
-        const hex = '#' + [r, g, b].map(x => {
-            const hex = x.toString(16);
-            return hex.length === 1 ? '0' + hex : hex;
-        }).join('');
-        
-        output.textContent = `HEX: ${hex.toUpperCase()}\nRGB: ${r}, ${g}, ${b}`;
-    }
-
-    // Timestamp Converter
+    // 2. Timestamp Converter
     function convertTimestamp() {
         const input = document.getElementById('timestamp-input').value.trim();
         const output = document.getElementById('timestamp-output');
         
-        if (!input) {
-            output.textContent = 'Please enter a timestamp or date';
-            return;
-        }
-        
         let date;
-        
-        // Handle Unix timestamp (seconds or milliseconds)
         if (/^\d+$/.test(input)) {
             date = new Date(input.length === 10 ? input * 1000 : +input);
-        } 
-        // Handle ISO date string or other date formats
-        else {
+        } else {
             date = new Date(input);
         }
         
-        if (isNaN(date.getTime())) {
-            output.textContent = 'Invalid timestamp/date format';
-            return;
-        }
-        
-        const unixSeconds = Math.floor(date.getTime() / 1000);
-        const unixMilliseconds = date.getTime();
+        if (isNaN(date.getTime())) return output.textContent = 'Invalid timestamp';
         
         output.textContent = `
-Local Time: ${date.toLocaleString()}
-UTC Time: ${date.toUTCString()}
-Unix Timestamp (seconds): ${unixSeconds}
-Unix Timestamp (milliseconds): ${unixMilliseconds}
-ISO 8601: ${date.toISOString()}`;
+Local: ${date.toLocaleString()}
+UTC: ${date.toUTCString()}
+Unix: ${Math.floor(date.getTime() / 1000)}
+ISO: ${date.toISOString()}`;
     }
 
-    // UUID Generator
+    // 3. UUID Generator
     function generateUUID() {
-        const output = document.getElementById('uuid-output');
-        const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        document.getElementById('uuid-output').textContent = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
             const r = Math.random() * 16 | 0;
-            const v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
         });
-        output.textContent = uuid;
     }
 
-    // Lorem Ipsum Generator
+    // 4. Lorem Ipsum Generator
     function generateLorem() {
-        const count = parseInt(document.getElementById('lorem-count').value) || 3;
-        const output = document.getElementById('lorem-output');
-        
-        if (count < 1 || count > 20) {
-            output.textContent = 'Please enter a number between 1 and 20';
-            return;
-        }
-        
+        const count = Math.min(20, Math.max(1, parseInt(document.getElementById('lorem-count').value) || 3));
         const lorem = [
             'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
             'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
@@ -814,28 +625,43 @@ ISO 8601: ${date.toISOString()}`;
         
         let result = '';
         for (let i = 0; i < count; i++) {
-            const sentences = [];
-            const sentenceCount = 3 + Math.floor(Math.random() * 3);
-            for (let j = 0; j < sentenceCount; j++) {
-                sentences.push(lorem[Math.floor(Math.random() * lorem.length)]);
-            }
-            result += sentences.join(' ') + '\n\n';
+            result += lorem[Math.floor(Math.random() * lorem.length)] + '\n\n';
         }
         
-        output.textContent = result.trim();
+        document.getElementById('lorem-output').textContent = result.trim();
     }
 
-    // Discord Tools
+    // ======================
+    // DISCORD TOOLS (4 tools)
+    // ======================
+
+    // 1. Webhook Deleter
+    async function deleteWebhook() {
+        const url = document.getElementById('delete-webhook-url').value.trim();
+        const resultElement = document.getElementById('delete-webhook-result');
+        
+        if (!url) return showResult(resultElement, 'Please enter a webhook URL', 'error');
+        
+        showResult(resultElement, 'Deleting...', 'loading');
+        
+        try {
+            const response = await fetch(url, { method: 'DELETE' });
+            if (response.ok) {
+                showResult(resultElement, 'Webhook deleted successfully!', 'success');
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        } catch (error) {
+            showResult(resultElement, `Error: ${error.message}`, 'error');
+        }
+    }
+
+    // 2. Embed Generator
     function generateEmbed() {
         const title = document.getElementById('embed-title').value.trim();
         const color = document.getElementById('embed-color').value.trim();
         const description = document.getElementById('embed-desc').value.trim();
         const output = document.getElementById('embed-output');
-        
-        if (!title && !description) {
-            output.textContent = 'Please enter at least a title or description';
-            return;
-        }
         
         const embed = {
             title: title || undefined,
@@ -847,151 +673,96 @@ ISO 8601: ${date.toISOString()}`;
         output.textContent = JSON.stringify({ embeds: [embed] }, null, 2);
     }
 
+    // 3. Timestamp Generator
     function generateDiscordTimestamp() {
         const dateInput = document.getElementById('discord-timestamp').value;
         const format = document.getElementById('discord-timestamp-format').value;
         const output = document.getElementById('discord-timestamp-output');
         
-        if (!dateInput) {
-            output.textContent = 'Please select a date and time';
-            return;
-        }
+        if (!dateInput) return output.textContent = 'Please select a date';
         
-        const date = new Date(dateInput);
-        const timestamp = Math.floor(date.getTime() / 1000);
-        
-        output.textContent = `Discord Timestamp: <t:${timestamp}:${format}>\n\nRaw format: \`<t:${timestamp}:${format}>\``;
+        const timestamp = Math.floor(new Date(dateInput).getTime() / 1000);
+        output.textContent = `Discord Timestamp: <t:${timestamp}:${format}>\n\nRaw: \`<t:${timestamp}:${format}>\``;
     }
 
+    // 4. Fake Token Generator
     function generateDiscordToken() {
-        const output = document.getElementById('discord-token-output');
         const part1 = btoa(Math.random().toString().substring(2)).substring(0, 24);
         const part2 = btoa(Math.random().toString().substring(2)).substring(0, 6);
         const part3 = btoa(Math.random().toString().substring(2)).substring(0, 27);
-        output.textContent = `${part1}.${part2}.${part3}`;
+        document.getElementById('discord-token-output').textContent = `${part1}.${part2}.${part3}`;
     }
 
-    function generateFakeNitro() {
-        const output = document.getElementById('nitro-output');
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let code = '';
-        
-        for (let i = 0; i < 16; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-            if (i % 4 === 3 && i < 15) code += '-';
-        }
-        
-        output.textContent = `https://discord.gift/${code}`;
-    }
+    // ======================
+    // GAME DEV TOOLS (4 tools)
+    // ======================
 
-    // Game Dev Tools
+    // 1. Lua Obfuscator
     function obfuscateLua() {
         const code = document.getElementById('lua-code').value.trim();
         const output = document.getElementById('lua-output');
         
-        if (!code) {
-            output.textContent = 'Please enter Lua code to obfuscate';
-            return;
-        }
-        
         // Simple obfuscation - replace variable names
-        const keywords = new Set(['and', 'break', 'do', 'else', 'elseif', 'end', 
-                                'false', 'for', 'function', 'if', 'in', 'local', 
-                                'nil', 'not', 'or', 'repeat', 'return', 'then', 
-                                'true', 'until', 'while']);
-        
+        const keywords = new Set(['and', 'break', 'do', 'else', 'elseif', 'end', 'false', 'for', 'function']);
         const varMap = {};
-        let obfuscated = code;
-        const varRegex = /\b(?!local\b)([a-zA-Z_][a-zA-Z0-9_]*)\b/g;
-        let match;
+        let counter = 0;
         
-        // Find all variables
-        while ((match = varRegex.exec(code)) !== null) {
-            const varName = match[1];
-            if (!keywords.has(varName) && !varMap[varName] && varName.length > 2) {
-                varMap[varName] = `_${Object.keys(varMap).length}`;
-            }
-        }
-        
-        // Replace variables
-        Object.entries(varMap).forEach(([oldName, newName]) => {
-            obfuscated = obfuscated.replace(new RegExp(`\\b${oldName}\\b`, 'g'), newName);
+        let obfuscated = code.replace(/\b(?!local\b)([a-zA-Z_][a-zA-Z0-9_]*)\b/g, match => {
+            if (keywords.has(match)) return match;
+            if (!varMap[match]) varMap[match] = `_${counter++}`;
+            return varMap[match];
         });
         
         output.textContent = obfuscated;
     }
 
+    // 2. Roblox Place ID Finder
     function findPlaceId() {
         const url = document.getElementById('roblox-url').value.trim();
         const output = document.getElementById('placeid-output');
         
-        if (!url) {
-            output.textContent = 'Please enter a Roblox game URL';
-            return;
-        }
-        
         const match = url.match(/(?:place\?id=|games\/)(\d+)/);
-        if (match && match[1]) {
-            output.textContent = `Place ID: ${match[1]}`;
-        } else {
-            output.textContent = 'Could not find Place ID in URL. Make sure it includes "place?id=" or "games/"';
-        }
+        output.textContent = match ? `Place ID: ${match[1]}` : 'Invalid Roblox URL';
     }
 
+    // 3. Minecraft Command Generator
     function generateMCCommand() {
         const type = document.getElementById('mc-command').value;
-        const output = document.getElementById('mc-command-output');
         let command = '';
         
         switch (type) {
-            case 'give':
-                command = '/give @p minecraft:diamond 1';
-                break;
-            case 'effect':
-                command = '/effect give @p minecraft:strength 60 1';
-                break;
-            case 'teleport':
-                command = '/tp @p 100 64 100';
-                break;
-            case 'summon':
-                command = '/summon minecraft:zombie ~ ~ ~ {CustomName:\'"Test Zombie"\', ArmorItems:[{},{},{},{id:"minecraft:diamond_helmet",Count:1b}]}';
-                break;
+            case 'give': command = '/give @p minecraft:diamond 1'; break;
+            case 'effect': command = '/effect give @p minecraft:strength 60 1'; break;
+            case 'teleport': command = '/tp @p 100 64 100'; break;
+            case 'summon': command = '/summon minecraft:zombie ~ ~ ~ {CustomName:\'"Test Zombie"\'}'; break;
         }
         
-        output.textContent = command;
+        document.getElementById('mc-command-output').textContent = command;
     }
 
+    // 4. FPS Calculator
     function calculateFPS() {
         const frames = parseInt(document.getElementById('fps-frames').value);
         const time = parseFloat(document.getElementById('fps-time').value);
         const output = document.getElementById('fps-output');
         
-        if (isNaN(frames)) {
-            output.textContent = 'Please enter a valid number of frames';
-            return;
+        if (isNaN(frames) || isNaN(time) || time <= 0) {
+            return output.textContent = 'Invalid input values';
         }
         
-        if (isNaN(time) || time <= 0) {
-            output.textContent = 'Please enter a valid time (greater than 0)';
-            return;
-        }
-        
-        const fps = (frames / time).toFixed(2);
-        output.textContent = `FPS: ${fps}`;
+        output.textContent = `FPS: ${(frames / time).toFixed(2)}`;
     }
 
-    // Other Tools
+    // ======================
+    // OTHER TOOLS (4 tools)
+    // ======================
+
+    // 1. Password Generator
     function generatePassword() {
-        const length = parseInt(document.getElementById('pass-length').value) || 12;
+        const length = Math.min(64, Math.max(8, parseInt(document.getElementById('pass-length').value) || 12));
         const uppercase = document.getElementById('pass-uppercase').checked;
         const numbers = document.getElementById('pass-numbers').checked;
         const symbols = document.getElementById('pass-symbols').checked;
-        const output = document.getElementById('pass-output');
-        
-        if (length < 8 || length > 64) {
-            output.textContent = 'Password length must be between 8 and 64';
-            return;
-        }
         
         let chars = 'abcdefghijklmnopqrstuvwxyz';
         if (uppercase) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -1003,43 +774,30 @@ ISO 8601: ${date.toISOString()}`;
             password += chars.charAt(Math.floor(Math.random() * chars.length));
         }
         
-        output.textContent = password;
+        document.getElementById('pass-output').textContent = password;
     }
 
+    // 2. QR Code Generator
     function generateQR() {
         const text = document.getElementById('qr-text').value.trim();
         const output = document.getElementById('qr-output');
         
-        if (!text) {
-            output.textContent = 'Please enter text or URL to generate QR code';
-            return;
-        }
+        if (!text) return output.textContent = 'Please enter text';
         
-        const size = 200;
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
-        output.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="max-width: 100%; height: auto; border: 1px solid #444;">`;
+        output.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}" alt="QR Code">`;
     }
 
-    // Text Encryption/Decryption (simple XOR cipher)
+    // 3. Text Encryption (XOR)
     function encryptText() {
         const text = document.getElementById('encrypt-text').value.trim();
         const key = document.getElementById('encrypt-key').value.trim();
         const output = document.getElementById('encrypt-output');
         
-        if (!text) {
-            output.textContent = 'Please enter text to encrypt';
-            return;
-        }
-        
-        if (!key) {
-            output.textContent = 'Please enter an encryption key';
-            return;
-        }
+        if (!text || !key) return output.textContent = 'Please enter text and key';
         
         let result = '';
         for (let i = 0; i < text.length; i++) {
-            const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-            result += String.fromCharCode(charCode);
+            result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
         }
         
         output.textContent = btoa(result);
@@ -1050,135 +808,60 @@ ISO 8601: ${date.toISOString()}`;
         const key = document.getElementById('encrypt-key').value.trim();
         const output = document.getElementById('encrypt-output');
         
-        if (!text) {
-            output.textContent = 'Please enter text to decrypt';
-            return;
-        }
-        
-        if (!key) {
-            output.textContent = 'Please enter the decryption key';
-            return;
-        }
+        if (!text || !key) return output.textContent = 'Please enter text and key';
         
         try {
             const decoded = atob(text);
             let result = '';
             for (let i = 0; i < decoded.length; i++) {
-                const charCode = decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-                result += String.fromCharCode(charCode);
+                result += String.fromCharCode(decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
             }
             output.textContent = result;
         } catch (e) {
-            output.textContent = 'Error: Invalid base64 input';
+            output.textContent = 'Invalid base64 input';
         }
     }
 
-    // Binary Converter
+    // 4. Binary Converter
     function textToBinary() {
         const text = document.getElementById('binary-input').value.trim();
         const output = document.getElementById('binary-output');
         
-        if (!text) {
-            output.textContent = 'Please enter text to convert';
-            return;
-        }
+        if (!text) return output.textContent = 'Please enter text';
         
-        let binary = '';
-        for (let i = 0; i < text.length; i++) {
-            binary += text.charCodeAt(i).toString(2).padStart(8, '0') + ' ';
-        }
-        
-        output.textContent = binary.trim();
+        output.textContent = text.split('').map(c => c.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
     }
 
     function binaryToText() {
         const binary = document.getElementById('binary-input').value.trim();
         const output = document.getElementById('binary-output');
         
-        if (!binary) {
-            output.textContent = 'Please enter binary to convert';
-            return;
+        if (!binary) return output.textContent = 'Please enter binary';
+        
+        try {
+            output.textContent = binary.split(' ').map(b => String.fromCharCode(parseInt(b, 2))).join('');
+        } catch (e) {
+            output.textContent = 'Invalid binary input';
         }
-        
-        // Clean input (remove non-binary characters)
-        const cleanBinary = binary.replace(/[^01]/g, '');
-        
-        // Split into 8-bit chunks
-        const chunks = [];
-        for (let i = 0; i < cleanBinary.length; i += 8) {
-            chunks.push(cleanBinary.substring(i, i + 8));
-        }
-        
-        let text = '';
-        for (const chunk of chunks) {
-            if (chunk.length === 8) {
-                text += String.fromCharCode(parseInt(chunk, 2));
-            }
-        }
-        
-        output.textContent = text;
     }
 
-    // Initialize on DOM load
+    // Helper function
+    function showResult(element, message, type) {
+        element.textContent = message;
+        element.style.color = type === 'error' ? '#ff6b6b' : 
+                            type === 'success' ? '#51cf66' : 
+                            type === 'loading' ? '#fcc419' : '';
+    }
+
+    // Initialize on load
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM fully loaded');
-        
-        // Hide loader and show content after timeout
         setTimeout(() => {
-            const loader = document.getElementById('loader');
-            const mainContent = document.getElementById('main-content');
-            
-            if (loader) loader.style.display = 'none';
-            if (mainContent) mainContent.style.display = 'block';
-            
-            console.log('Loader hidden, main content shown');
-            
-            try {
-                initTabFromHash();
-                
-                // Fix all internal links to maintain /P/ path if needed
-                document.querySelectorAll('a').forEach(link => {
-                    if (link.href && link.href.includes(window.location.host) && 
-                        !link.href.includes('/P/') && 
-                        !link.getAttribute('href').startsWith('http') &&
-                        !link.getAttribute('href').startsWith('#')) {
-                        
-                        const currentPath = window.location.pathname;
-                        const basePath = currentPath.includes('/P/') ? '/P/' : '/';
-                        
-                        if (link.getAttribute('href').startsWith('/')) {
-                            link.href = basePath + link.getAttribute('href').substring(1);
-                        } else {
-                            link.href = basePath + link.getAttribute('href');
-                        }
-                    }
-                });
-            } catch (e) {
-                console.error('Initialization error:', e);
-            }
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            initTabFromHash();
         }, 1000);
     });
 
-    // Fallback in case loader gets stuck
-    window.addEventListener('load', function() {
-        console.log('Window fully loaded');
-        const loader = document.getElementById('loader');
-        if (loader) loader.style.display = 'none';
-        
-        const mainContent = document.getElementById('main-content');
-        if (mainContent) mainContent.style.display = 'block';
-    });
-
-    // Maximum timeout for loader (5 seconds)
-    setTimeout(() => {
-        const loader = document.getElementById('loader');
-        if (loader) loader.style.display = 'none';
-        
-        const mainContent = document.getElementById('main-content');
-        if (mainContent) mainContent.style.display = 'block';
-    }, 5000);
-
-    // Handle hash changes
     window.addEventListener('hashchange', initTabFromHash);
 </script>
 </body>
