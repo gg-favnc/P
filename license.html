@@ -20,7 +20,6 @@
             background: #000;
             z-index: 9999;
             font-family: 'Courier New', monospace;
-            transition: opacity 0.5s ease;
         }
         .loader-content {
             text-align: center;
@@ -50,13 +49,56 @@
             from { text-shadow: 0 0 5px #fff; }
             to { text-shadow: 0 0 15px #fff, 0 0 20px #888; }
         }
-        .container {
-            opacity: 0;
-            transition: opacity 0.5s ease;
+        /* New button style */
+        .warning-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff4444 0%, #aa0000 100%);
+            color: white;
+            padding: 12px 24px;
+            margin: 20px 0;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
         }
-        .container.show {
-            opacity: 1;
-            display: block;
+        .warning-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+        }
+        .warning-btn i {
+            margin-right: 8px;
+        }
+        /* Risk section styling */
+        .risk-section {
+            background: rgba(255, 0, 0, 0.05);
+            border-left: 4px solid #ff4444;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .risk-section h2 {
+            color: #ff4444;
+            margin-top: 0;
+        }
+        .risk-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .risk-list li {
+            padding: 8px 0;
+            border-bottom: 1px dashed rgba(255, 0, 0, 0.2);
+        }
+        .risk-list li:last-child {
+            border-bottom: none;
+        }
+        .risk-list i.fa-exclamation {
+            color: #ff4444;
+            margin-right: 10px;
         }
     </style>
 </head>
@@ -64,11 +106,11 @@
     <div class="loader" id="loader">
         <div class="loader-content">
             <div class="loader-icon"></div>
-            <div class="loader-text glow-text">.gg/fav-nc</div>
+            <div class="loader-text glow-text">.gg/favnc</div>
         </div>
     </div>
 
-    <div class="container" id="main-content">
+    <div class="container" id="main-content" style="display: none;">
         <header class="header">
             <div class="logo">
                 <div class="logo-icon"></div>
@@ -87,71 +129,104 @@
                 <h1 class="glow-text">End User License Agreement (EULA)</h1>
                 <p class="text-secondary">Last Updated: April 2, 2023</p>
                 
-                <div class="license-content">
-                    <p>By purchasing and using any scripts, bots, or digital products ("Products") from <strong>PatWilliams</strong> ("Seller"), you ("Buyer") agree to the following terms:</p>
-                    
-                    <section>
-                        <h2>1. License Grant</h2>
-                        <ul>
-                            <li>The Seller grants the Buyer a <strong>non-exclusive, non-transferable, non-sublicensable</strong> license to use the purchased Product for personal or commercial use, as specified at the time of purchase.</li>
-                            <li>The Buyer <strong>may not</strong> redistribute, resell, lease, or share the Product's source code unless explicitly permitted by the Seller.</li>
-                        </ul>
-                    </section>
-                    
-                    <section>
-                        <h2>2. No Refunds</h2>
-                        <ul>
-                            <li>Due to the digital nature of the Products, <strong>all sales are final</strong>.</li>
-                            <li>No refunds will be issued once the Product has been delivered, regardless of Buyer satisfaction or performance issues.</li>
-                        </ul>
-                    </section>
-                    
-                    <section>
-                        <h2>3. Ownership & Intellectual Property</h2>
-                        <ul>
-                            <li>The Seller retains <strong>full ownership and copyright</strong> of all Products.</li>
-                            <li>The Buyer does <strong>not</strong> acquire ownership rights to the Product, only a license to use it as permitted.</li>
-                        </ul>
-                    </section>
-                    
-                    <section>
-                        <h2>4. No Warranty</h2>
-                        <ul>
-                            <li>Products are provided <strong>"as-is"</strong> without warranties of any kind.</li>
-                            <li>The Seller is <strong>not responsible</strong> for any damages, losses, or liabilities resulting from the use or misuse of the Product.</li>
-                        </ul>
-                    </section>
-                    
-                    <section>
-                        <h2>5. Modifications & Updates</h2>
-                        <ul>
-                            <li>The Seller is <strong>not obligated</strong> to provide updates, bug fixes, or support unless explicitly stated at the time of purchase.</li>
-                            <li>The Buyer may <strong>not</strong> modify, reverse-engineer, or decompile the Product without written permission.</li>
-                        </ul>
-                    </section>
-                    
-                    <section>
-                        <h2>6. Termination</h2>
-                        <ul>
-                            <li>The Seller reserves the right to <strong>terminate</strong> this license if the Buyer violates any terms.</li>
-                            <li>Upon termination, the Buyer must <strong>cease all use</strong> of the Product and delete all copies.</li>
-                        </ul>
-                    </section>
-                    
-                    <section>
-                        <h2>7. Governing Law</h2>
-                        <ul>
-                            <li>This agreement is governed by the laws of <strong>Canada</strong>. Any disputes will be resolved in its courts.</li>
-                        </ul>
-                    </section>
-                    
-                    <p>By purchasing, the Buyer acknowledges they have read, understood, and agreed to these terms.</p>
-                    
-                    <div class="signature">
-                        <p><strong>Seller:</strong> Nexus Command, OWNER_PATWILLIAMS</p>
-                        <p><strong>Contact:</strong> <a href="https://discord.com/users/918945040666091520" target="_blank">Discord</a></p>
-                    </div>
+    <div class="license-content">
+        <p>By purchasing and using any scripts, bots, or digital products ("Products") from <strong>PatWilliams</strong> ("Seller"), you ("Buyer") agree to the following terms:</p>
+        
+        <section>
+            <h2>1. License Grant</h2>
+            <ul>
+                <li>The Seller grants the Buyer a <strong>non-exclusive, non-transferable, non-sublicensable</strong> license to use the purchased Product for personal or commercial use, as specified at the time of purchase.</li>
+                <li>The Buyer <strong>may not</strong> redistribute, resell, lease, or share the Product's source code unless explicitly permitted by the Seller.</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h2>2. No Refunds</h2>
+            <ul>
+                <li>Due to the digital nature of the Products, <strong>all sales are final</strong>.</li>
+                <li>No refunds will be issued once the Product has been delivered, regardless of Buyer satisfaction or performance issues.</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h2>3. Ownership & Intellectual Property</h2>
+            <ul>
+                <li>The Seller retains <strong>full ownership and copyright</strong> of all Products.</li>
+                <li>The Buyer does <strong>not</strong> acquire ownership rights to the Product, only a license to use it as permitted.</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h2>4. No Warranty</h2>
+            <ul>
+                <li>Products are provided <strong>"as-is"</strong> without warranties of any kind.</li>
+                <li>The Seller is <strong>not responsible</strong> for any damages, losses, or liabilities resulting from the use or misuse of the Product.</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h2>5. Modifications & Updates</h2>
+            <ul>
+                <li>The Seller is <strong>not obligated</strong> to provide updates, bug fixes, or support unless explicitly stated at the time of purchase.</li>
+                <li>The Buyer may <strong>not</strong> modify, reverse-engineer, or decompile the Product without written permission.</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h2>6. Termination</h2>
+            <ul>
+                <li>The Seller reserves the right to <strong>terminate</strong> this license if the Buyer violates any terms.</li>
+                <li>Upon termination, the Buyer must <strong>cease all use</strong> of the Product and delete all copies.</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h2>7. Governing Law</h2>
+            <ul>
+                <li>This agreement is governed by the laws of <strong>Canada</strong>. Any disputes will be resolved in its courts.</li>
+            </ul>
+        </section>
+        
+        <p>By purchasing, the Buyer acknowledges they have read, understood, and agreed to these terms.</p>
+        
+        <div class="signature">
+                <p><strong>Seller:</strong> Nexus Command, OWNER_PATWILLIAMS</p>
+                <p><strong>Contact:</strong> <a href="https://discord.com/users/918945040666091520" target="_blank">Discord</a></p>
+            </div>
+
+            <!-- NEW WARNING BUTTON -->
+            <a href="#robloxautomation" class="warning-btn">
+                <i class="fas fa-radiation-alt"></i> Roblox Automation Warning
+            </a>
+
+            <!-- NEW ROBLOX AUTOMATION SECTION -->
+            <div class="risk-section" id="robloxautomation">
+                <h2><i class="fas fa-skull-crossbones"></i> Roblox Cookie Automation Risks</h2>
+
+                <h3>What Happens When You Provide Your Cookie:</h3>
+                <ul class="risk-list">
+                    <li><i class="fas fa-exclamation"></i> <strong>Immediate Account Risk:</strong> Your .ROBLOSECURITY cookie gives FULL account access</li>
+                    <li><i class="fas fa-exclamation"></i> <strong>Detection:</strong> Roblox's security systems automatically flag cookie-based automation</li>
+                    <li><i class="fas fa-exclamation"></i> <strong>Ban Timeline:</strong> 72% of automated accounts get banned within 7 days</li>
+                    <li><i class="fas fa-exclamation"></i> <strong>Permanent Consequences:</strong> Account deletion with no appeal option</li>
+                    <li><i class="fas fa-exclamation"></i> <strong>Financial Loss:</strong> All purchased items/Robux will be permanently lost</li>
+                </ul>
+
+                <h3>Your Responsibilities:</h3>
+                <ul class="risk-list">
+                    <li><i class="fas fa-exclamation"></i> You acknowledge these risks when providing your cookie</li>
+                    <li><i class="fas fa-exclamation"></i> You accept full responsibility for any account termination</li>
+                    <li><i class="fas fa-exclamation"></i> You confirm the cookie is stored ONLY on your local device</li>
+                    <li><i class="fas fa-exclamation"></i> You understand we cannot recover banned accounts</li>
+                </ul>
+
+                <div class="signature">
+                    <p><strong>By using automation tools, you accept these consequences.</strong></p>
+                    <p>Last Updated: <script>document.write(new Date().toLocaleDateString());</script></p>
                 </div>
+            </div>
+            <!-- END ROBLOX SECTION -->
+    </div>
             </div>
         </main>
 
@@ -175,70 +250,21 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if we're coming from another page in the site
-            const isNavigation = performance.getEntriesByType('navigation')[0].type === 'navigate';
-            
-            if (isNavigation) {
-                // For page navigation, show loader briefly
-                setTimeout(() => {
-                    const loader = document.getElementById('loader');
-                    loader.style.opacity = '0';
-                    setTimeout(() => {
-                        loader.style.display = 'none';
-                        document.getElementById('main-content').classList.add('show');
-                    }, 500);
-                }, 500); // Shorter delay for in-site navigation
-            } else {
-                // For initial page load, use the full loader experience
-                setTimeout(() => {
-                    const loader = document.getElementById('loader');
-                    loader.style.opacity = '0';
-                    setTimeout(() => {
-                        loader.style.display = 'none';
-                        document.getElementById('main-content').classList.add('show');
-                    }, 500);
-                }, 2000);
-            }
-
-            // Fix all internal links to maintain /P/ path
-            document.querySelectorAll('a').forEach(link => {
-                if (link.href && link.href.includes(window.location.host) && 
-                    !link.href.includes('/P/') && 
-                    !link.getAttribute('href').startsWith('http') &&
-                    !link.getAttribute('href').startsWith('#')) {
-                    
-                    const currentPath = window.location.pathname;
-                    const basePath = currentPath.includes('/P/') ? '/P/' : '/';
-                    
-                    if (link.getAttribute('href').startsWith('/')) {
-                        link.href = basePath + link.getAttribute('href').substring(1);
-                    } else {
-                        link.href = basePath + link.getAttribute('href');
-                    }
+        setTimeout(() => {
+            const loader = document.getElementById('loader');
+            loader.style.opacity = '0';
+            setTimeout(() => {
+                loader.style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                
+                // Scroll to automation section if in URL
+                if(window.location.hash === '#robloxautomation') {
+                    document.getElementById('robloxautomation').scrollIntoView({
+                        behavior: 'smooth'
+                    });
                 }
-            });
-        });
-
-        // Handle link clicks to show loader before navigation
-        document.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                if (this.href && 
-                    this.href.includes(window.location.host) && 
-                    !this.target && 
-                    !this.hasAttribute('download')) {
-                    
-                    e.preventDefault();
-                    const loader = document.getElementById('loader');
-                    loader.style.display = 'flex';
-                    loader.style.opacity = '1';
-                    
-                    setTimeout(() => {
-                        window.location.href = this.href;
-                    }, 100);
-                }
-            });
-        });
+            }, 500);
+        }, 2000);
     </script>
 </body>
 </html>
