@@ -464,6 +464,16 @@
     </div>
 
 <script>
+function cleanPageUrls() {
+    if (window.history.replaceState) {
+        const path = window.location.pathname;
+        if (path.endsWith('.html')) {
+            const cleanUrl = path.replace(/\.html$/, '');
+            window.history.replaceState(null, null, cleanUrl);
+        }
+    }
+}
+    
     // Tab functionality
     function openTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(tab => {
