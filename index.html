@@ -92,7 +92,17 @@
     </div>
 
 <script>
-    // Initialize counters
+
+
+function cleanPageUrls() {
+    if (window.history.replaceState) {
+        const path = window.location.pathname;
+        if (path.endsWith('.html')) {
+            const cleanUrl = path.replace(/\.html$/, '');
+            window.history.replaceState(null, null, cleanUrl);
+        }
+    }
+}
     function initializeCounters() {
         // Viewer counter
         if (!localStorage.getItem('globalViewCount')) {
